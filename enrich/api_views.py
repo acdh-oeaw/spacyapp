@@ -1,6 +1,9 @@
 import spacy
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, schema
+from rest_framework.views import APIView
+from enrich.custom_parsers import JsonToDocParser
+from enrich.custom_renderers import DocToJsonRenderer
 
 nlp = spacy.load('de_core_news_sm')
 
@@ -49,6 +52,30 @@ def textparser(request):
             "POST": "form-data or x-www-form-urlencoded"
         }
     )
+
+
+
+class JsonParser(APIView):
+    """
+    Endpoint to process text from the ACDH internal json standard
+
+    post:
+    param *tokenArray*: array of token dicts:
+         param *tokenId*: Integer, token id (optional)
+         param *value*: token as string
+    param *options*:
+          param *outputproperties*: dict of parts of the pipeline to use.
+                   e.g. {"lemma": true, "ner": false, "tagger": true}
+          param *language*: not implemented yet
+    """
+    parser_classes = (JsonToDocParser,)
+    renderer_classes = (DocToJsonRenderer,)
+    
+    def post(self, request, format=None):
+        doc, nlp_loc, options = request.data
+        for name, proc in nlp_loc.pipeline:
+            doc = proc(doc)
+        return Response(doc)
 
 
 @api_view()
