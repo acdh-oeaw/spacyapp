@@ -54,7 +54,6 @@ def textparser(request):
     )
 
 
-
 class JsonParser(APIView):
     """
     Endpoint to process text from the ACDH internal json standard
@@ -67,10 +66,32 @@ class JsonParser(APIView):
           param *outputproperties*: dict of parts of the pipeline to use.
                    e.g. {"lemma": true, "ner": false, "tagger": true}
           param *language*: not implemented yet
+
+
+    Example:
+    import requests
+
+    url = "http://127.0.0.1:8000/query/jsonparser-api/"
+
+    payload = "
+        {\"tokenArray\": [{\"value\": \"Georg\", \"whitespace\": true}, {\"value\": \"fuhr\",\
+         \"whitespace\": true}, {\"value\": \"mit\", \"whitespace\": true}, {\"value\": \"dem\",\
+          \"whitespace\": true}, {\"value\": \"Rad\", \"whitespace\": false}, {\"value\": \".\",\
+           \"whitespace\": false}], \"language\": \"german\"}"
+    headers = {
+        'content-type': "application/json+acdhlang",
+        'accept': "application/json+acdhlang",
+        'cache-control': "no-cache",
+        'postman-token': "94350f70-5d62-a4fb-ddd8-a548d6e3a528"
+        }
+
+    response = requests.request("POST", url, data=payload, headers=headers)
+
+    print(response.text)
     """
     parser_classes = (JsonToDocParser,)
     renderer_classes = (DocToJsonRenderer,)
-    
+
     def post(self, request, format=None):
         doc, nlp_loc, options = request.data
         for name, proc in nlp_loc.pipeline:

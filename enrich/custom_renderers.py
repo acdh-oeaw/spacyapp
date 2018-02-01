@@ -1,5 +1,6 @@
 from rest_framework import renderers
 
+
 class DocToJsonRenderer(renderers.JSONRenderer):
     media_type = "application/json+acdhlang"
 

@@ -7,6 +7,7 @@ spacy_lang_lst = {"german": "de_core_news_sm",
                   "deutsch": "de_core_news_sm",
                   "ger": "de_core_news_sm"}
 
+
 class JsonToDocParser(JSONParser):
     """Parser parsing a Json into a spacy Doc element"""
 
