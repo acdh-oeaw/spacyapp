@@ -15,14 +15,16 @@ class DocToJsonRenderer(renderers.JSONRenderer):
             chunk['tokens'] = []
             for y in x:
                 parts = {}
-                parts['text'] = y.text
+                parts['tokenId'] = y._.tokenId
+                parts['value'] = y.text
                 parts['lemma'] = y.lemma_
                 parts['pos'] = y.pos_
-                parts['tag'] = y.tag_
+                parts['type'] = y.tag_
                 parts['dep'] = y.dep_
                 parts['shape'] = y.shape_
                 parts['is_alpha'] = y.is_alpha
-                parts['token_id'] = counter
+                parts['ent_iob'] = y.ent_iob_
+                parts['ent_type'] = y.ent_type_
                 chunk['tokens'].append(parts)
                 counter += 1
             result.append(chunk)
