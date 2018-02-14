@@ -4,6 +4,12 @@ from rest_framework.decorators import api_view, schema
 from rest_framework.views import APIView
 from enrich.custom_parsers import JsonToDocParser
 from enrich.custom_renderers import DocToJsonRenderer
+from rest_framework.parsers import MultiPartParser
+from rest_framework.exceptions import ParseError
+
+import datetime
+import zipfile
+from os import makedirs, listdir
 
 nlp = spacy.load('de_core_news_sm')
 
@@ -98,6 +104,66 @@ class JsonParser(APIView):
             doc = proc(doc)
         return Response(doc)
 
+
+class NLPPipeline(APIView):
+    """
+    Endpoint that allows to define a pipeline that should be applied to a file.
+ 
+    post:
+    param *file*: plain/text, raw file or list of plain/text
+    param *fileType*: (string) type of file, currently only TEI, acdh-json and plain-text are supported
+    param *NLPPipeline*: (list) either list of dicts with detailed settings
+          for every process (not implemented yet) or list of strings.
+          possible settings:
+                      * acdh-tokenizer|spacy-tokenizer
+                      * spacy-tagger|treetagger-tagger
+                      * spacy-parser
+                      * spacy-ner
+    """
+    parser_classes = (MultiPartParser, )
+    file_types = ['tei', 'acdh-json', 'plain-text']
+    zip_types = ['zip']
+
+    def process_file(self, file):
+        return file
+    
+    def post(self, request, format=None):
+        data = request.data
+        self.pipeline = request.data.get('NLPPipeline', None)
+        file_type = request.data.get('fileType', None)
+        zip_type = request.data.get('zipType', None)
+        if zip_type is not None:
+            if zip_type not in self.zip_types:
+                raise ParseError(detail='zip type not supported')
+        if file_type.lower() not in self.file_types:
+            raise ParseError(detail='file type not supported')
+        f = data.get('file')
+        print(type(f))
+        fn_orig = str(f)
+        ts = datetime.datetime.now().strftime('%Y-%m-%d_%H_%M_%S')
+        user = request.user.get_username()
+        if len(user) == 0 or user is None:
+            user = 'anonymous'
+        fn = 'tmp/{}_{}'.format(user, ts)
+        with open('{}.{}'.format(fn, fn_orig.split('.')[1]), 'wb+') as destination:
+            for chunk in f.chunks():
+                destination.write(chunk)
+        if zip_type is not None:
+            makedirs('tmp/{}_{}_folder'.format(user, ts))
+            makedirs('tmp/{}_{}_output'.format(user, ts))
+            zip_ref = zipfile.ZipFile('tmp/{}_{}.{}'.format(user, ts, fn_orig.split('.')[1]), 'r')
+            zip_ref.extractall('tmp/{}_{}_folder'.format(user, ts))
+            zip_ref.close()
+            for filename in listdir('tmp/{}_{}_folder'.format(user, ts)):
+                res = self.process_file(open(filename, 'rb'))
+                with open('tmp/{}_{}_output/{}'.format(user, ts, filename), 'wb+') as out:
+                    out.write(res)
+            zipf = zipfile.ZipFile('{}_output.zip'.format(fn), 'w', zipfile.ZIP_DEFLATED)
+            for filename in listdir('tmp/{}_{}_output'.format(user, ts)):
+                zipf.write('tmp/{}_{}_output/{}'.format(user, ts, filename))
+            zipf.close()
+            
+        return Response(data)
 
 @api_view()
 def lemma(request):
