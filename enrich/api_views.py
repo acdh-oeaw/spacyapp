@@ -140,6 +140,8 @@ class NLPPipeline(APIView):
         return res
 
     def post(self, request, format=None):
+        tmp_dir = '../tmp/'
+        dwld_dir = '../download/'
         data = request.data
         self.pipeline = data.get('NLPPipeline', None)
         if self.pipeline is not None:
@@ -159,27 +161,27 @@ class NLPPipeline(APIView):
         user = request.user.get_username()
         if len(user) == 0 or user is None:
             user = 'anonymous'
-        fn = 'tmp/{}_{}'.format(user, ts)
+        fn = '{}{}_{}'.format(tmp_dir, user, ts)
         with open('{}.{}'.format(fn, fn_orig.split('.')[1]), 'wb+') as destination:
             for chunk in f.chunks():
                 destination.write(chunk)
         if zip_type is not None:
-            makedirs('tmp/{}_{}_folder'.format(user, ts))
-            makedirs('tmp/{}_{}_output'.format(user, ts))
-            zip_ref = zipfile.ZipFile('tmp/{}_{}.{}'.format(user, ts, fn_orig.split('.')[1]), 'r')
-            zip_ref.extractall('tmp/{}_{}_folder'.format(user, ts))
+            makedirs('{}{}_{}_folder'.format(tmp_dir, user, ts))
+            makedirs('{}{}_{}_output'.format(tmp_dir, user, ts))
+            zip_ref = zipfile.ZipFile('{}{}_{}.{}'.format(tmp_dir, user, ts, fn_orig.split('.')[1]), 'r')
+            zip_ref.extractall('{}{}_{}_folder'.format(tmp_dir, user, ts))
             zip_ref.close()
-            print(listdir('tmp/{}_{}_folder'.format(user, ts)))
-            for filename in listdir('tmp/{}_{}_folder'.format(user, ts)):
-                res = self.process_file('tmp/{}_{}_folder/{}'.format(user, ts, filename))
-                with open('tmp/{}_{}_output/{}'.format(user, ts, filename), 'w') as out:
+            print(listdir('{}{}_{}_folder'.format(tmp_dir, user, ts)))
+            for filename in listdir('{}{}_{}_folder'.format(tmp_dir, user, ts)):
+                res = self.process_file('{}{}_{}_folder/{}'.format(tmp_dir, user, ts, filename))
+                with open('{}{}_{}_output/{}'.format(tmp_dir, user, ts, filename), 'w') as out:
                     out.write(res.text)
             zipf = zipfile.ZipFile('{}_output.zip'.format(fn), 'w', zipfile.ZIP_DEFLATED)
-            for filename in listdir('tmp/{}_{}_output'.format(user, ts)):
-                zipf.write('tmp/{}_{}_output/{}'.format(user, ts, filename))
+            for filename in listdir('{}{}_{}_output'.format(tmp_dir, user, ts)):
+                zipf.write('{}{}_{}_output/{}'.format(tmp_dir, user, ts, filename))
             zipf.close()
-            shutil.copy('{}_output.zip'.format(fn), 'download/{}_output.zip'.format(fn.split('/')[1]))
-            resp = {'status': 'finished', 'download': 'download/{}_output.zip'.format(fn.split('/')[1])}
+            shutil.copy('{}_output.zip'.format(fn), '{}{}_output.zip'.format(dwld_dir, fn.split('/')[1]))
+            resp = {'status': 'finished', 'download': '{}{}_output.zip'.format(dwld_dir, fn.split('/')[1])}
             return Response(resp)
 
 
