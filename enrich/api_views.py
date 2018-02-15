@@ -10,6 +10,8 @@ from rest_framework.exceptions import ParseError
 import datetime
 import zipfile
 from os import makedirs, listdir
+import requests
+import shutil
 
 nlp = spacy.load('de_core_news_sm')
 
@@ -125,13 +127,26 @@ class NLPPipeline(APIView):
     zip_types = ['zip']
 
     def process_file(self, file):
-        return file
-    
+        print(file)
+        print(self.file_type)
+        res = 'test'
+        print(self.pipeline)
+        if self.file_type.lower() == 'tei' and self.pipeline[0].lower() == 'acdh-tokenizer':
+            print('started')
+            with open(file, 'r') as file:
+                headers = {'Content-type': 'application/xml;charset=UTF-8', 'accept': 'application/xml'}
+                url = 'https://tokenizer.eos.arz.oeaw.ac.at/exist/restxq/xtoks/tokenize/default'
+                res = requests.post(url, headers=headers, data=file.read().encode('utf8'))
+        return res
+
     def post(self, request, format=None):
         data = request.data
-        self.pipeline = request.data.get('NLPPipeline', None)
-        file_type = request.data.get('fileType', None)
-        zip_type = request.data.get('zipType', None)
+        self.pipeline = data.get('NLPPipeline', None)
+        if self.pipeline is not None:
+            self.pipeline = self.pipeline.split(',')
+        file_type = data.get('fileType', None)
+        self.file_type = file_type
+        zip_type = data.get('zipType', None)
         if zip_type is not None:
             if zip_type not in self.zip_types:
                 raise ParseError(detail='zip type not supported')
@@ -154,16 +169,19 @@ class NLPPipeline(APIView):
             zip_ref = zipfile.ZipFile('tmp/{}_{}.{}'.format(user, ts, fn_orig.split('.')[1]), 'r')
             zip_ref.extractall('tmp/{}_{}_folder'.format(user, ts))
             zip_ref.close()
+            print(listdir('tmp/{}_{}_folder'.format(user, ts)))
             for filename in listdir('tmp/{}_{}_folder'.format(user, ts)):
-                res = self.process_file(open(filename, 'rb'))
-                with open('tmp/{}_{}_output/{}'.format(user, ts, filename), 'wb+') as out:
-                    out.write(res)
+                res = self.process_file('tmp/{}_{}_folder/{}'.format(user, ts, filename))
+                with open('tmp/{}_{}_output/{}'.format(user, ts, filename), 'w') as out:
+                    out.write(res.text)
             zipf = zipfile.ZipFile('{}_output.zip'.format(fn), 'w', zipfile.ZIP_DEFLATED)
             for filename in listdir('tmp/{}_{}_output'.format(user, ts)):
                 zipf.write('tmp/{}_{}_output/{}'.format(user, ts, filename))
             zipf.close()
-            
-        return Response(data)
+            shutil.copy('{}_output.zip'.format(fn), 'download/{}_output.zip'.format(fn.split('/')[1]))
+            resp = {'status': 'finished', 'download': 'download/{}_output.zip'.format(fn.split('/')[1])}
+            return Response(resp)
+
 
 @api_view()
 def lemma(request):
