@@ -11,6 +11,10 @@ class TeiReader():
     def __init__(self, xml):
         self.ns_tei = {'tei': "http://www.tei-c.org/ns/1.0"}
         self.ns_xml = {'xml': "http://www.w3.org/XML/1998/namespace"}
+        self.nsmap = {
+            'tei': "http://www.tei-c.org/ns/1.0",
+            'xml': "http://www.w3.org/XML/1998/namespace"
+        }
         self.file = xml
         try:
             self.original = ET.parse(self.file)
@@ -46,3 +50,29 @@ class TeiReader():
                 token['whitespace'] = False
             token_list.append(token)
         return token_list
+
+    def process_tokenlist(self, tokenlist):
+
+        """ takes a tokenlist and writes updated the tei:w tags. Returns the updated self.tree """
+
+        expr = './/tei:w[@xml:id=$xmlid]'
+        for x in tokenlist:
+            try:
+                node = self.tree.xpath(expr, xmlid=x['tokenId'], namespaces=self.nsmap)[0]
+            except IndexError:
+                node = None
+            if node is not None:
+                try:
+                    node.attrib['lemma'] = x['lemma']
+                except AttributeError:
+                    pass
+                try:
+                    node.attrib['type'] = x['type']
+                except AttributeError:
+                    pass
+                try:
+                    node.attrib['ana'] = x['pos']
+                except AttributeError:
+                    pass
+
+        return self.tree
