@@ -36,7 +36,7 @@ class TeiReader():
         for x in words:
             token = {}
             token['value'] = x.text
-            token['tokenId'] = x.xpath('./@xml:id', namespaces=self.ns_tei)
+            token['tokenId'] = x.xpath('./@xml:id', namespaces=self.ns_tei)[0]
             try:
                 if x.getnext().tag.endswith('seg'):
                     token['whitespace'] = True
