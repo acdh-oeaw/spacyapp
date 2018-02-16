@@ -25,7 +25,7 @@ class TeiReader():
         except:
             self.parsed_file = "parsing didn't work"
 
-    def create_json(self):
+    def create_tokenlist(self):
 
         """ returns a list of token-dicts extracted from tei:w, tei:pc and tei:seg """
 
