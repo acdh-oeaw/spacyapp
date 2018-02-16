@@ -6,12 +6,14 @@ from enrich.custom_parsers import JsonToDocParser
 from enrich.custom_renderers import DocToJsonRenderer
 from rest_framework.parsers import MultiPartParser
 from rest_framework.exceptions import ParseError
+from .tei import TeiReader
 
 import datetime
 import zipfile
 from os import makedirs, listdir
 import requests
 import shutil
+import lxml.etree as et
 
 nlp = spacy.load('de_core_news_sm')
 
@@ -137,11 +139,29 @@ class NLPPipeline(APIView):
                 headers = {'Content-type': 'application/xml;charset=UTF-8', 'accept': 'application/xml'}
                 url = 'https://tokenizer.eos.arz.oeaw.ac.at/exist/restxq/xtoks/tokenize/default'
                 res = requests.post(url, headers=headers, data=file.read().encode('utf8'))
+        if self.file_type.lower() == 'tei':
+            res_tei = TeiReader(res.text)
+            res = res_tei.create_tokenlist()
+        if self.pipeline[1].lower().startswith('spacy'):
+            headers = {'content-type': "application/json+acdhlang",
+                       'accept': "application/json+acdhlang"}
+            payload = {'tokenArray': res, 'language': 'german'}
+            res = requests.post("http://127.0.0.1:8000/query/jsonparser-api/", headers=headers, json=payload)
+            if res.status_code == 500:
+                res = res.text
+            else:
+                res = res.json()
+                print(res['result'][:50])
+                res1 = [x['tokens'] for x in res['result']]
+                res2 = [item for sublist in res1 for item in sublist]
+                res = res_tei.process_tokenlist(res2)
+                print(type(res))
+                res = et.tostring(res, pretty_print=True)
         return res
 
     def post(self, request, format=None):
-        tmp_dir = '../tmp/'
-        dwld_dir = '../download/'
+        tmp_dir = 'tmp/'
+        dwld_dir = 'download/'
         data = request.data
         self.pipeline = data.get('NLPPipeline', None)
         if self.pipeline is not None:
@@ -174,8 +194,9 @@ class NLPPipeline(APIView):
             print(listdir('{}{}_{}_folder'.format(tmp_dir, user, ts)))
             for filename in listdir('{}{}_{}_folder'.format(tmp_dir, user, ts)):
                 res = self.process_file('{}{}_{}_folder/{}'.format(tmp_dir, user, ts, filename))
-                with open('{}{}_{}_output/{}'.format(tmp_dir, user, ts, filename), 'w') as out:
-                    out.write(res.text)
+                with open('{}{}_{}_output/{}'.format(tmp_dir, user, ts, filename), 'wb') as out:
+                    #out.write(res.text)
+                    out.write(res)
             zipf = zipfile.ZipFile('{}_output.zip'.format(fn), 'w', zipfile.ZIP_DEFLATED)
             for filename in listdir('{}{}_{}_output'.format(tmp_dir, user, ts)):
                 zipf.write('{}{}_{}_output/{}'.format(tmp_dir, user, ts, filename))
