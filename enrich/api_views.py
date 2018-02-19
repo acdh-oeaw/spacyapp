@@ -132,7 +132,7 @@ class NLPPipeline(APIView):
     def process_file(self, file):
         res = 'test'
         if self.file_type.lower() == 'tei' and self.pipeline[0].lower() == 'acdh-tokenizer':
-            with open(file, 'r') as file:
+            with open(file, 'r', encoding='utf-8') as file:
                 headers = {'Content-type': 'application/xml;charset=UTF-8', 'accept': 'application/xml'}
                 url = 'https://tokenizer.eos.arz.oeaw.ac.at/exist/restxq/xtoks/tokenize/default'
                 res = requests.post(url, headers=headers, data=file.read().encode('utf8'))
@@ -146,6 +146,7 @@ class NLPPipeline(APIView):
                        "outputproperties": {"lemma": True, "no-unknown": False}}
             res = requests.post(url, headers=headers, json=payload)
             if res.status_code != 200:
+                print(res.text)
                 res = res.text
             else:
                 res = res.json()['tokenArray']
@@ -156,6 +157,7 @@ class NLPPipeline(APIView):
             payload = {'tokenArray': res, 'language': 'german', 'options': {'outputproperties': {'pipeline': spacy_pipeline}}}
             res = requests.post("https://spacyapp.eos.arz.oeaw.ac.at/query/jsonparser-api/", headers=headers, json=payload)
             if res.status_code != 200:
+                print(res.text)
                 res = res.text
             else:
                 res = res.json()
