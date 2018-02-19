@@ -14,6 +14,7 @@ from os import makedirs, listdir
 import requests
 import shutil
 import lxml.etree as et
+import json
 
 nlp = spacy.load('de_core_news_sm')
 
@@ -73,8 +74,8 @@ class JsonParser(APIView):
          param *tokenId*: Integer, token id (optional)
          param *value*: token as string
     param *options*:
-          param *outputproperties*: dict of parts of the pipeline to use.
-                   e.g. {"lemma": true, "ner": false, "tagger": true}
+          param *outputproperties*: dict.
+                   e.g. {"lemma": true, "pipeline": ["tagger", "parser", "ner"]}
           param *language*: not implemented yet
 
 
@@ -129,12 +130,8 @@ class NLPPipeline(APIView):
     zip_types = ['zip']
 
     def process_file(self, file):
-        print(file)
-        print(self.file_type)
         res = 'test'
-        print(self.pipeline)
         if self.file_type.lower() == 'tei' and self.pipeline[0].lower() == 'acdh-tokenizer':
-            print('started')
             with open(file, 'r') as file:
                 headers = {'Content-type': 'application/xml;charset=UTF-8', 'accept': 'application/xml'}
                 url = 'https://tokenizer.eos.arz.oeaw.ac.at/exist/restxq/xtoks/tokenize/default'
@@ -142,21 +139,31 @@ class NLPPipeline(APIView):
         if self.file_type.lower() == 'tei':
             res_tei = TeiReader(res.text)
             res = res_tei.create_tokenlist()
-        if self.pipeline[1].lower().startswith('spacy'):
+        if self.pipeline[1].lower() == "treetagger-tagger":
+            url = "https://linguistictagging.eos.arz.oeaw.ac.at"
+            headers = {'accept': 'application/json'}
+            payload = {'tokenArray': res, 'language': 'german',
+                       "outputproperties": {"lemma": True, "no-unknown": False}}
+            res = requests.post(url, headers=headers, json=payload)
+            if res.status_code != 200:
+                res = res.text
+            else:
+                res = res.json()['tokenArray']
+        spacy_pipeline = [x.split('-')[1] for x in self.pipeline if x.startswith('spacy')]
+        if len(spacy_pipeline) > 0:
             headers = {'content-type': "application/json+acdhlang",
                        'accept': "application/json+acdhlang"}
-            payload = {'tokenArray': res, 'language': 'german'}
-            res = requests.post("http://127.0.0.1:8000/query/jsonparser-api/", headers=headers, json=payload)
-            if res.status_code == 500:
+            payload = {'tokenArray': res, 'language': 'german', 'options': {'outputproperties': {'pipeline': spacy_pipeline}}}
+            res = requests.post("https://spacyapp.eos.arz.oeaw.ac.at/query/jsonparser-api/", headers=headers, json=payload)
+            if res.status_code != 200:
                 res = res.text
             else:
                 res = res.json()
-                print(res['result'][:50])
                 res1 = [x['tokens'] for x in res['result']]
                 res2 = [item for sublist in res1 for item in sublist]
-                res = res_tei.process_tokenlist(res2)
-                print(type(res))
-                res = et.tostring(res, pretty_print=True)
+        if self.file_type == 'tei':
+            res = res_tei.process_tokenlist(res2)
+            res = et.tostring(res, pretty_print=True)
         return res
 
     def post(self, request, format=None):
@@ -175,7 +182,6 @@ class NLPPipeline(APIView):
         if file_type.lower() not in self.file_types:
             raise ParseError(detail='file type not supported')
         f = data.get('file')
-        print(type(f))
         fn_orig = str(f)
         ts = datetime.datetime.now().strftime('%Y-%m-%d_%H_%M_%S')
         user = request.user.get_username()
@@ -191,7 +197,6 @@ class NLPPipeline(APIView):
             zip_ref = zipfile.ZipFile('{}{}_{}.{}'.format(tmp_dir, user, ts, fn_orig.split('.')[1]), 'r')
             zip_ref.extractall('{}{}_{}_folder'.format(tmp_dir, user, ts))
             zip_ref.close()
-            print(listdir('{}{}_{}_folder'.format(tmp_dir, user, ts)))
             for filename in listdir('{}{}_{}_folder'.format(tmp_dir, user, ts)):
                 res = self.process_file('{}{}_{}_folder/{}'.format(tmp_dir, user, ts, filename))
                 with open('{}{}_{}_output/{}'.format(tmp_dir, user, ts, filename), 'wb') as out:
