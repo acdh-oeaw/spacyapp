@@ -59,7 +59,7 @@ $(document).ready(function () {
             processData: false,
             contentType: false,
             cache: false,
-            timeout: 600000,
+            timeout: 0,
             success: function (data) {
 
                 $("#res_table").append('<td><a href="/'+data.download+'"</a>'+data.download+'</td>');
