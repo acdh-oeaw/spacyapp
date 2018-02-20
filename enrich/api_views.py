@@ -172,18 +172,21 @@ class NLPPipeline(APIView):
         tmp_dir = 'tmp/'
         dwld_dir = 'download/'
         data = request.data
+        print(data)
         self.pipeline = data.get('NLPPipeline', None)
         if self.pipeline is not None:
             self.pipeline = self.pipeline.split(',')
         file_type = data.get('fileType', None)
         self.file_type = file_type
         zip_type = data.get('zipType', None)
+        print(zip_type)
         if zip_type is not None:
             if zip_type not in self.zip_types:
                 raise ParseError(detail='zip type not supported')
         if file_type.lower() not in self.file_types:
             raise ParseError(detail='file type not supported')
         f = data.get('file')
+        print(f)
         fn_orig = str(f)
         ts = datetime.datetime.now().strftime('%Y-%m-%d_%H_%M_%S')
         user = request.user.get_username()

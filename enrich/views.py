@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view
 from django.shortcuts import render
 from django.views.generic.edit import FormView
 from .forms import TokenForm, LongTextForm
+from django.shortcuts import render_to_response
 
 nlp = spacy.load('de_core_news_sm')
 
@@ -58,3 +59,7 @@ class Lemmatize(FormView):
             context['pos'] = doc.pos_
             context['tag'] = doc.tag_
         return render(self.request, self.template_name, context)
+
+
+def NLPPipelineView(request):
+    return render_to_response('enrich/nlppipeline.html')
