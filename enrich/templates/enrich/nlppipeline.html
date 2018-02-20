@@ -8,11 +8,15 @@
 <form id="fileUploadForm" enctype="multipart/form-data">
   <div class="form-group">
     <label for="fileType">File type</label>
-    <input class="form-control" id="fileType" name="fileType" style="height: auto;" />
+    <select class="form-control" id="fileType" name="fileType" style="height: auto;">
+      <option>tei</option>
+    </select>
     <label for="zipType">zip type</label>
-    <input class="form-control" id="zipType" name="zipType" style="height: auto;" />
+    <select class="form-control" id="zipType" name="zipType" style="height: auto;">
+      <option>zip</option>
+    </select>
     <label for="NLPPipeline">NLP pipeline</label>
-    <input class="form-control" id="NLPPipeline" name="NLPPipeline" style="height: auto;" />
+    <input class="form-control" id="NLPPipeline" name="NLPPipeline" style="height: auto;"></input>
     <p class="help-block">comma seperated values of ACDH NLP pipeline</p>
           <label for="file">Upload a file to the ACDH-NLP pipeline</label>
           <input class="form-control" type="file" id="file" name="file" style="height: auto;" />
