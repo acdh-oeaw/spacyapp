@@ -32,7 +32,8 @@ def textparser(request):
     """
     enriched = {}
     if request.method == 'POST':
-        longtext = request.POST.get('longtext')
+        longtext = request.data.get('longtext')
+        # print(longtext)
     else:
         longtext = request.GET.get('longtext')
     if longtext:
@@ -113,7 +114,7 @@ class JsonParser(APIView):
 class NLPPipeline(APIView):
     """
     Endpoint that allows to define a pipeline that should be applied to a file.
- 
+
     post:
     param *file*: plain/text, raw file or list of plain/text
     param *fileType*: (string) type of file, currently only TEI, acdh-json and plain-text are supported
