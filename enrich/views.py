@@ -1,4 +1,5 @@
 import spacy
+from spacy import displacy
 from rest_framework.decorators import api_view
 from django.shortcuts import render
 from django.views.generic.edit import FormView
@@ -39,6 +40,7 @@ class TextParser(FormView):
                     chunk['tokens'].append(parts)
                 result.append(chunk)
             context['result'] = result
+            context['vis'] = displacy.render(doc, style='ent')
         return render(self.request, self.template_name, context)
 
 
