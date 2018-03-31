@@ -31,13 +31,19 @@ INSTALLED_APPS = [
     'rest_framework',
     'webpage',
     'enrich',
+    'rest_framework.authtoken'
 ]
 
 CRISPY_TEMPLATE_PACK = "bootstrap3"
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
     'DEFAULT_PERMISSION_CLASSES':
-    ('rest_framework.permissions.IsAuthenticatedOrReadOnly',)
+    ('rest_framework.permissions.AllowAny',),
+    'DEFAULT_PARSER_CLASSES':
+    ('rest_framework.parsers.JSONParser',)
 }
 
 

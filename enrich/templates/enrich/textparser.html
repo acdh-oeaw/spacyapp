@@ -8,54 +8,66 @@
     <p>
         {% crispy form %}
     </p>
-    <legen>Parsed and Enriched</legen>
-        {% for x in result %}
-            <h3>{{ x.sent }}</h3>
-            <table class="table">
-                <tr>
-                    <th>
-                        Text
-                    </th>
-                    <th>
-                        Lemma
-                    </th>
-                    <th>
-                        POS
-                    </th>
-                    <th>
-                        TAG
-                    </th>
-                    <th>
-                        DEP
-                    </th>
-                    <th>
-                        SHAPE
-                    </th>
-                </tr>
-                {% for token in x.tokens %}
+    <legend data-toggle="collapse" href="#entities">
+        <span class="glyphicon glyphicon-collapse-down"></span>
+        Named Entities
+    </legend>
+    <div id="entities" class="collapse">
+        {{ vis|safe }}
+    </div>
+    <hr/>
+    <legend data-toggle="collapse" href="#parsed">
+        <span class="glyphicon glyphicon-collapse-down"></span>
+        Parsed and Enriched
+    </legend>
+        <div id="parsed" class="collapse">
+            {% for x in result %}
+                <h3>{{ x.sent }}</h3>
+                <table class="table">
                     <tr>
-                        <td>
-                            {{ token.text }}
-                        </td>
-                        <td>
-                            {{ token.lemma }}
-                        </td>
-                        <td>
-                            {{ token.pos }}
-                        </td>
-                        <td>
-                            {{ token.tag }}
-                        </td>
-                        <td>
-                            {{ token.dep }}
-                        </td>
-                        <td>
-                            {{ token.shape }}
-                        </td>
+                        <th>
+                            Text
+                        </th>
+                        <th>
+                            Lemma
+                        </th>
+                        <th>
+                            POS
+                        </th>
+                        <th>
+                            TAG
+                        </th>
+                        <th>
+                            DEP
+                        </th>
+                        <th>
+                            SHAPE
+                        </th>
                     </tr>
-                {% endfor %}
-            </table>
-        {% endfor %}
-
+                    {% for token in x.tokens %}
+                        <tr>
+                            <td>
+                                {{ token.text }}
+                            </td>
+                            <td>
+                                {{ token.lemma }}
+                            </td>
+                            <td>
+                                {{ token.pos }}
+                            </td>
+                            <td>
+                                {{ token.tag }}
+                            </td>
+                            <td>
+                                {{ token.dep }}
+                            </td>
+                            <td>
+                                {{ token.shape }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% endfor %}
+        </div>
 </div>
 {% endblock %}

@@ -1,0 +1,83 @@
+{% extends "webpage/base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% load webpage_extras %}
+{% block title %} About {% endblock %}
+{% block content %}
+<div class="container">
+<form id="fileUploadForm" enctype="multipart/form-data">
+  <div class="form-group">
+    <label for="fileType">File type</label>
+    <select class="form-control" id="fileType" name="fileType" style="height: auto;">
+      <option>tei</option>
+    </select>
+    <label for="zipType">zip type</label>
+    <select class="form-control" id="zipType" name="zipType" style="height: auto;">
+      <option>zip</option>
+    </select>
+    <label for="NLPPipeline">NLP pipeline</label>
+    <input class="form-control" id="NLPPipeline" name="NLPPipeline" style="height: auto;" value="acdh-tokenizer,spacy-tagger,spacy-parser,spacy-ner" />
+    <p class="help-block">comma seperated values of ACDH NLP pipeline</p>
+          <label for="file">Upload a file to the ACDH-NLP pipeline</label>
+          <input class="form-control" type="file" id="file" name="file" style="height: auto;" />
+          <p class="help-block">zip of TEIs or single TEI</p>
+        </div>
+      <button type="submit" name="uploadp_btn" class="btn btn-primary" id="btnSubmit">Upload!</button>
+</form>
+<hr/>
+<div id="results">
+  <table id="res_table">
+    <tr><th>downloads</th></tr>
+  </table>
+</div>
+</div>
+<script type="text/javascript">
+$(document).ready(function () {
+
+    $("#btnSubmit").click(function (event) {
+
+        //stop submit the form, we will post it manually.
+        event.preventDefault();
+
+        // Get form
+        var form = $('#fileUploadForm')[0];
+
+		// Create an FormData object
+        var data = new FormData(form);
+
+		// If you want to add an extra field for the FormData
+        //data.append("CustomField", "This is some extra data, testing");
+
+		// disabled the submit button
+        $("#btnSubmit").prop("disabled", true);
+
+        $.ajax({
+            type: "POST",
+            enctype: 'multipart/form-data',
+            url: "/query/nlppipeline-api/",
+            data: data,
+            processData: false,
+            contentType: false,
+            cache: false,
+            timeout: 0,
+            success: function (data) {
+
+                $("#res_table").append('<td><a href="/'+data.download+'"</a>'+data.download+'</td>');
+                console.log("SUCCESS : ", data);
+                $("#btnSubmit").prop("disabled", false);
+
+            },
+            error: function (e) {
+
+                $("#result").text(e.responseText);
+                console.log("ERROR : ", e);
+                $("#btnSubmit").prop("disabled", false);
+
+            }
+        });
+
+    });
+
+});
+</script>
+{% endblock %}
