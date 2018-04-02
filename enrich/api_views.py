@@ -7,6 +7,7 @@ from enrich.custom_renderers import DocToJsonRenderer
 from rest_framework.parsers import MultiPartParser
 from rest_framework.exceptions import ParseError
 from .tei import TeiReader
+from enrich.spacy_utils import ner
 
 import datetime
 import zipfile
@@ -17,6 +18,36 @@ import lxml.etree as et
 import json
 
 nlp = spacy.load('de_core_news_sm')
+
+
+@api_view(['GET', 'POST'])
+@schema(None)
+def nerparser(request):
+    """
+    get:
+    Send any text as value of a *longtext* paramter
+
+    post:
+    Processes any german text which is sent as value of a *longtext* param\
+    and extracts Named Entities
+
+    """
+
+    if request.method == 'POST':
+        longtext = request.data.get('longtext')
+    else:
+        longtext = request.GET.get('longtext')
+    if longtext:
+        doc = nlp("{}".format(longtext))
+        enriched = ner.fetch_ner_samples(doc)
+        return Response(enriched)
+    return Response(
+        {
+            "Param-Name": "longtext",
+            "Param-Value": "any text you want",
+            "POST": "json"
+        }
+    )
 
 
 @api_view(['GET', 'POST'])
@@ -61,7 +92,7 @@ def textparser(request):
         {
             "Param-Name": "longtext",
             "Param-Value": "any text you want",
-            "POST": "form-data or x-www-form-urlencoded"
+            "POST": "json"
         }
     )
 
@@ -117,7 +148,8 @@ class NLPPipeline(APIView):
 
     post:
     param *file*: plain/text, raw file or list of plain/text
-    param *fileType*: (string) type of file, currently only TEI, acdh-json and plain-text are supported
+    param *fileType*: (string) type of file, currently only TEI,\
+    acdh-json and plain-text are supported
     param *NLPPipeline*: (list) either list of dicts with detailed settings
           for every process (not implemented yet) or list of strings.
           possible settings:
@@ -134,7 +166,9 @@ class NLPPipeline(APIView):
         res = 'test'
         if self.file_type.lower() == 'tei' and self.pipeline[0].lower() == 'acdh-tokenizer':
             with open(file, 'r', encoding='utf-8') as file:
-                headers = {'Content-type': 'application/xml;charset=UTF-8', 'accept': 'application/xml'}
+                headers = {
+                    'Content-type': 'application/xml;charset=UTF-8', 'accept': 'application/xml'
+                }
                 url = 'https://tokenizer.eos.arz.oeaw.ac.at/exist/restxq/xtoks/tokenize/default'
                 res = requests.post(url, headers=headers, data=file.read().encode('utf8'))
         if self.file_type.lower() == 'tei':
@@ -155,8 +189,14 @@ class NLPPipeline(APIView):
         if len(spacy_pipeline) > 0:
             headers = {'content-type': "application/json+acdhlang",
                        'accept': "application/json+acdhlang"}
-            payload = {'tokenArray': res, 'language': 'german', 'options': {'outputproperties': {'pipeline': spacy_pipeline}}}
-            res = requests.post("https://spacyapp.eos.arz.oeaw.ac.at/query/jsonparser-api/", headers=headers, json=payload)
+            payload = {
+                'tokenArray': res, 'language': 'german',
+                'options': {'outputproperties': {'pipeline': spacy_pipeline}}
+            }
+            res = requests.post(
+                "https://spacyapp.eos.arz.oeaw.ac.at/query/jsonparser-api/",
+                headers=headers, json=payload
+            )
             if res.status_code != 200:
                 print(res.text)
                 res = res.text
@@ -200,20 +240,27 @@ class NLPPipeline(APIView):
         if zip_type is not None:
             makedirs('{}{}_{}_folder'.format(tmp_dir, user, ts))
             makedirs('{}{}_{}_output'.format(tmp_dir, user, ts))
-            zip_ref = zipfile.ZipFile('{}{}_{}.{}'.format(tmp_dir, user, ts, fn_orig.split('.')[1]), 'r')
+            zip_ref = zipfile.ZipFile('{}{}_{}.{}'.format(
+                tmp_dir, user, ts, fn_orig.split('.')[1]), 'r'
+            )
             zip_ref.extractall('{}{}_{}_folder'.format(tmp_dir, user, ts))
             zip_ref.close()
             for filename in listdir('{}{}_{}_folder'.format(tmp_dir, user, ts)):
                 res = self.process_file('{}{}_{}_folder/{}'.format(tmp_dir, user, ts, filename))
                 with open('{}{}_{}_output/{}'.format(tmp_dir, user, ts, filename), 'wb') as out:
-                    #out.write(res.text)
+                    # out.write(res.text)
                     out.write(res)
             zipf = zipfile.ZipFile('{}_output.zip'.format(fn), 'w', zipfile.ZIP_DEFLATED)
             for filename in listdir('{}{}_{}_output'.format(tmp_dir, user, ts)):
                 zipf.write('{}{}_{}_output/{}'.format(tmp_dir, user, ts, filename))
             zipf.close()
-            shutil.copy('{}_output.zip'.format(fn), '{}{}_output.zip'.format(dwld_dir, fn.split('/')[1]))
-            resp = {'status': 'finished', 'download': '{}{}_output.zip'.format(dwld_dir, fn.split('/')[1])}
+            shutil.copy(
+                '{}_output.zip'.format(fn), '{}{}_output.zip'.format(dwld_dir, fn.split('/')[1])
+            )
+            resp = {
+                'status': 'finished',
+                'download': '{}{}_output.zip'.format(dwld_dir, fn.split('/')[1])
+            }
             return Response(resp)
 
 

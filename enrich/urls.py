@@ -4,6 +4,7 @@ from . import views, api_views
 app_name = 'enrich'
 
 urlpatterns = [
+    path('nerparser-api/', api_views.nerparser, name='nerparser-api'),
     path('textparser/', views.TextParser.as_view(), name='textparser'),
     path('lemmatize/', views.Lemmatize.as_view(), name='lemmatize'),
     path('lemma/', api_views.lemma, name='lemma'),
