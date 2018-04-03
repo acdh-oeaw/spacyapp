@@ -17,5 +17,11 @@ def fetch_ner_samples(spacydoc):
             sample['end_char'] = ent.end_char
             sample['label'] = ent.label_
             sample['markup'] = sent.text.replace(ent.text, "{}"+ent.text+"{}")
+            dict_string = "|".join([
+                sent.text, ent.text, ent.label_,
+                "{}".format(ent.start_char), "{}".format(ent.end_char)
+            ])
+            hash_id = hash(dict_string)
+            sample['hash_id'] = hash_id
             ent_per_sent.append(sample)
     return ent_per_sent
