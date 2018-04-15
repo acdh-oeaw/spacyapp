@@ -169,7 +169,7 @@ class NLPPipeline(APIView):
                 headers = {
                     'Content-type': 'application/xml;charset=UTF-8', 'accept': 'application/xml'
                 }
-                url = 'https://tokenizer.eos.arz.oeaw.ac.at/exist/restxq/xtoks/tokenize/default'
+                url = 'https://xtx.acdh.oeaw.ac.at/exist/restxq/xtx/tokenize/default'
                 res = requests.post(url, headers=headers, data=file.read().encode('utf8'))
         if self.file_type.lower() == 'tei':
             res_tei = TeiReader(res.text)
