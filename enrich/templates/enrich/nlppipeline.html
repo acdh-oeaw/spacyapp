@@ -3,6 +3,10 @@
 {% load crispy_forms_tags %}
 {% load webpage_extras %}
 {% block title %} About {% endblock %}
+{% block scriptHeader %}
+{{block.super}}
+<script type="text/javascript" src="{% static 'webpage/libraries/csrf.js' %}"></script>
+{% endblock scriptHeader %}
 {% block content %}
 <div class="container">
 <form id="fileUploadForm" enctype="multipart/form-data">

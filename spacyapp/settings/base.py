@@ -19,6 +19,13 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(os.path.join(__file__, '../'))))
 
 # Application definition
+CELERY_BROKER_URL = 'pyamqp://guest@localhost//'
+
+#: Only add pickle to this list if your broker is secured
+#: from unwanted access (see userguide/security.html)
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_TASK_SERIALIZER = 'json'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -27,10 +34,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_tables2',
     'crispy_forms',
     'rest_framework',
     'webpage',
     'enrich',
+    'django_celery_results',
+    'spacyal',
     'rest_framework.authtoken'
 ]
 
@@ -38,7 +48,8 @@ CRISPY_TEMPLATE_PACK = "bootstrap3"
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+	'rest_framework.authentication.TokenAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES':
     ('rest_framework.permissions.AllowAny',),
