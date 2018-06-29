@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import render, render_to_response
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext, loader
@@ -8,6 +9,11 @@ from .forms import form_user_login
 
 class GenericWebpageView(TemplateView):
     template_name = 'webpage/index.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(GenericWebpageView, self).get_context_data(**kwargs)
+        context['apps'] = settings.INSTALLED_APPS
+        return context
 
     def get_template_names(self):
         template_name = "webpage/{}.html".format(self.kwargs.get("template", 'index'))

@@ -39,8 +39,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'webpage',
     'enrich',
-    'django_celery_results',
-    'spacyal',
     'rest_framework.authtoken'
 ]
 

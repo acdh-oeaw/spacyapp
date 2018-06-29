@@ -1,5 +1,6 @@
-#from django.conf.urls import url, include
+# from django.conf.urls import url, include
 from django.urls import path, include
+from django.conf import settings
 from django.contrib import admin
 from rest_framework import routers
 from rest_framework.documentation import include_docs_urls
@@ -12,6 +13,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('query/', include('enrich.urls', namespace='enrich')),
     path('', include('webpage.urls', namespace='webpage')),
-    path('spacyal_api/', include('spacyal.api_urls')),
-    path('spacyal/', include('spacyal.urls'))
 ]
+
+if 'spacyal' in settings.INSTALLED_APPS:
+    urlpatterns.append(
+        path('spacyal_api/', include('spacyal.api_urls')),
+        path('spacyal/', include('spacyal.urls'))
+    )

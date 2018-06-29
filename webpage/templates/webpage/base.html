@@ -110,7 +110,9 @@
                         <ul class="dropdown-menu">
                             <li><a href="{% url 'enrich:nerparser-api' %}">Extract NER (API) </a></li>
                             {% if user.is_authenticated %}
-                                <li><a href="{% url 'spacyal:al_project-list' %}">Train NER model</a></li>
+                                {% if 'spacyal' in apps %}
+                                    <li><a href="{% url 'spacyal:al_project-list' %}">Train NER model</a></li>
+                                {% endif %}
                             {% endif %}
                         </ul>
                     </li>
