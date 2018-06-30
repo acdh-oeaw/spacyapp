@@ -12,6 +12,24 @@ spacy_lang_lst = {"german": "de_core_news_sm",
 spacy_pipeline = ['tagger', 'parser', 'ner']
 
 
+def process_tokenlist(nlp, tokenlist, enriched=None):
+    json = {}
+    json['tokenArray'] = tokenlist
+    ar_tok = [x['value'] for x in json['tokenArray']]
+    ar_wsp = [x.get('whitespace', True) for x in json['tokenArray']]
+    Token.set_extension('tokenId', False)
+    doc = Doc(nlp.vocab, words=ar_tok, spaces=ar_wsp)
+    for id, t in enumerate(doc):
+        t._.set('tokenId', json['tokenArray'][id].get('tokenId', False))
+        t_type = json['tokenArray'][id].get('type', False)
+        if not t.tag_ and t_type:
+            t.tag_ = t_type
+    if enriched:
+        return nlp(doc.text)
+    else:
+        return doc
+
+
 class JsonToDocParser(JSONParser):
     """Parser parsing a Json into a spacy Doc element"""
 
@@ -21,21 +39,19 @@ class JsonToDocParser(JSONParser):
         json = super(JsonToDocParser, self).parse(stream, "application/json", parser_context)
         lang = json.get("language", "german")
         options = json.get("options", False)
-        Token.set_extension('tokenId', False)
         disable_pipeline = []
         if options:
             pipel = jmespath.search('outputproperties.pipeline', options)
             disable_pipeline = [x for x in spacy_pipeline if x not in pipel]
         nlp = spacy.load(spacy_lang_lst[lang.lower()], disable=disable_pipeline)
-        ar_tok = [x['value'] for x in json['tokenArray']]
-        ar_wsp = [x.get('whitespace', True) for x in json['tokenArray']]
-        doc = Doc(nlp.vocab, words=ar_tok, spaces=ar_wsp)
-        for id, t in enumerate(doc):
-            t._.set('tokenId', json['tokenArray'][id].get('tokenId', False))
-            t_type = json['tokenArray'][id].get('type', False)
-            if not t.tag_ and t_type:
-                t.tag_ = t_type
+        doc = process_tokenlist(nlp, json['tokenArray'])
+        # ar_tok = [x['value'] for x in json['tokenArray']]
+        # ar_wsp = [x.get('whitespace', True) for x in json['tokenArray']]
+        # doc = Doc(nlp.vocab, words=ar_tok, spaces=ar_wsp)
+        # for id, t in enumerate(doc):
+        #     t._.set('tokenId', json['tokenArray'][id].get('tokenId', False))
+        #     t_type = json['tokenArray'][id].get('type', False)
+        #     if not t.tag_ and t_type:
+        #         t.tag_ = t_type
 
         return doc, nlp, options
-
-

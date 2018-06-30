@@ -77,7 +77,13 @@ class Tcf(XMLReader):
             except AttributeError:
                 follows = None
             if follows:
-                if follows[0].isalnum():
+                if token['value'] == "(":
+                    token['whitespace'] = False
+                elif token['value'] == "„":
+                    token['whitespace'] = False
+                elif token['value'] == "‒":
+                    token['whitespace'] = True
+                elif follows[0].isalnum():
                     token['whitespace'] = True
                 elif follows[0] == "„":
                     token['whitespace'] = True
@@ -89,3 +95,33 @@ class Tcf(XMLReader):
                 token['whitespace'] = False
             token_list.append(token)
         return token_list
+
+    def process_tokenlist(self, tokenlist):
+
+        """ takes a tokenlist and updates the selected elements. Returns the updated self.tree """
+
+        expr = './/tcf:token[ID=$id]'
+        for x in tokenlist:
+            try:
+                node = self.tree.xpath(expr, id=x['tokenId'], namespaces=self.nsmap)
+            except IndexError:
+                node = None
+            if node is not None:
+                try:
+                    node.attrib['lemma'] = x['lemma']
+                except AttributeError:
+                    pass
+                try:
+                    node.attrib['iob'] = x['iob']
+                except AttributeError:
+                    pass
+                try:
+                    node.attrib['type'] = x['type']
+                except AttributeError:
+                    pass
+                try:
+                    node.attrib['ana'] = x['pos']
+                except AttributeError:
+                    pass
+
+            return self.tree

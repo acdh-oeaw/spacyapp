@@ -60,7 +60,7 @@ class TeiReader(XMLReader):
 
     def process_tokenlist(self, tokenlist):
 
-        """ takes a tokenlist and writes updated the tei:w tags. Returns the updated self.tree """
+        """ takes a tokenlist and updated the tei:w tags. Returns the updated self.tree """
 
         expr = './/tei:w[@xml:id=$xmlid]'
         for x in tokenlist:
