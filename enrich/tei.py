@@ -1,4 +1,6 @@
 import lxml.etree as ET
+import time
+import datetime
 
 ns_tei = {'tei': "http://www.tei-c.org/ns/1.0"}
 ns_xml = {'xml': "http://www.w3.org/XML/1998/namespace"}
@@ -30,6 +32,19 @@ class XMLReader():
             self.parsed_file = ET.tostring(self.tree, encoding="utf-8")
         except:
             self.parsed_file = "parsing didn't work"
+
+    def tree_to_file(self, file=None):
+        """saves current tree to file"""
+        import lxml.etree as ET
+        if file:
+            pass
+        else:
+            timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d-%H-%M-%S')
+            file = "{}.xml".format(timestamp)
+
+        with open(file, 'wb') as f:
+            f.write(ET.tostring(self.tree))
+        return file
 
 
 class TeiReader(XMLReader):

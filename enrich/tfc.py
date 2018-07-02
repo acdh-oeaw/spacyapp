@@ -1,4 +1,5 @@
 from enrich.tei import XMLReader
+from datetime import datetime
 
 
 class Tcf(XMLReader):
@@ -96,32 +97,47 @@ class Tcf(XMLReader):
             token_list.append(token)
         return token_list
 
-    def process_tokenlist(self, tokenlist):
-
+    def process_tokenlist(self, tokenlist, by_id=None):
         """ takes a tokenlist and updates the selected elements. Returns the updated self.tree """
+        nr_tokens = len(tokenlist)
+        nr_nodes = len(self.tree.xpath('.//tcf:token', namespaces=self.nsmap))
+        print("# tokens: {}".format(nr_tokens))
+        print("# token-nodes: {}".format(nr_nodes))
+        if by_id:
+            expr = './/tcf:token[@ID=$id]'
+            for x in tokenlist:
+                print('by ID')
+                try:
+                    node = self.tree.xpath(expr, id=x['tokenId'], namespaces=self.nsmap)[0]
+                except IndexError:
+                    node = None
+                if node is not None:
+                    try:
+                        node.attrib['lemma'] = x['lemma']
+                    except AttributeError:
+                        pass
+                    try:
+                        node.attrib['iob'] = x['iob']
+                    except AttributeError:
+                        pass
+                    try:
+                        node.attrib['type'] = x['type']
+                    except AttributeError:
+                        pass
+                    try:
+                        node.attrib['ana'] = x['pos']
+                    except AttributeError:
+                        pass
+        elif nr_nodes == nr_nodes:
+            print('not by ID')
+            counter = 0
+            for x in self.list_nodes('token'):
+                x.attrib['lemma'] = tokenlist[counter]['lemma']
+                x.attrib['iob'] = tokenlist[counter]['iob']
+                x.attrib['type'] = tokenlist[counter]['type']
+                x.attrib['ana'] = tokenlist[counter]['pos']
+                counter += 1
+        else:
+            pass
 
-        expr = './/tcf:token[ID=$id]'
-        for x in tokenlist:
-            try:
-                node = self.tree.xpath(expr, id=x['tokenId'], namespaces=self.nsmap)
-            except IndexError:
-                node = None
-            if node is not None:
-                try:
-                    node.attrib['lemma'] = x['lemma']
-                except AttributeError:
-                    pass
-                try:
-                    node.attrib['iob'] = x['iob']
-                except AttributeError:
-                    pass
-                try:
-                    node.attrib['type'] = x['type']
-                except AttributeError:
-                    pass
-                try:
-                    node.attrib['ana'] = x['pos']
-                except AttributeError:
-                    pass
-
-            return self.tree
+        return self.tree

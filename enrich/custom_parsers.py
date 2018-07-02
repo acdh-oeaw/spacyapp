@@ -13,6 +13,7 @@ spacy_pipeline = ['tagger', 'parser', 'ner']
 
 
 def process_tokenlist(nlp, tokenlist, enriched=None):
+    """ if enriched=True the created doc object runs through the nlp-processing-pipeline """
     json = {}
     json['tokenArray'] = tokenlist
     ar_tok = [x['value'] for x in json['tokenArray']]
@@ -25,9 +26,9 @@ def process_tokenlist(nlp, tokenlist, enriched=None):
         if not t.tag_ and t_type:
             t.tag_ = t_type
     if enriched:
-        return nlp(doc.text)
-    else:
-        return doc
+        for name, proc in nlp.pipeline:
+            doc = proc(doc)
+    return doc
 
 
 class JsonToDocParser(JSONParser):
