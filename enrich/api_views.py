@@ -268,6 +268,7 @@ class NLPPipeline(APIView):
 
 class TestAgreement(APIView):
     """TestAgreement: takes list of ACDH-lang formated Jsons and computes various agreement measures."""
+    parser_classes = (JsonToDocParser,)
 
     @staticmethod
     def compute_agreement(text1, text2, agreement='cohen kappa', attribute='ENT_TYPE'):
@@ -290,6 +291,7 @@ class TestAgreement(APIView):
         :param request: DRF request object containing the request to the API
         :param format:
         """
+        print(request.data)
         doc, nlp, options = request.data
         if 'agreement' not in options or 'attribute' not in options:
             ParseError('agreement or attribute parameter not specified')

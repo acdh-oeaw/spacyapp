@@ -19,7 +19,10 @@ def process_tokenlist(nlp, tokenlist, enriched=False):
     json['tokenArray'] = tokenlist
     ar_tok = [x['value'] for x in json['tokenArray']]
     ar_wsp = [x.get('whitespace', True) for x in json['tokenArray']]
-    Token.set_extension('tokenId', False)
+    try:
+        Token.get_extension('tokenId')
+    except KeyError:
+        Token.set_extension('tokenId', default=False)
     doc = Doc(nlp.vocab, words=ar_tok, spaces=ar_wsp)
     for id, t in enumerate(doc):
         t._.set('tokenId', json['tokenArray'][id].get('tokenId', False))
@@ -54,7 +57,10 @@ class JsonToDocParser(JSONParser):
         disable_pipeline = []
         if options:
             pipel = jmespath.search('outputproperties.pipeline', options)
-            disable_pipeline = [x for x in spacy_pipeline if x not in pipel]
+            if pipel is None:
+                disable_pipeline = [x for x in spacy_pipeline]
+            else:
+                disable_pipeline = [x for x in spacy_pipeline if x not in pipel]
         nlp = spacy.load(
             spacy_lang_lst[lang.lower()],
             disable=disable_pipeline,
