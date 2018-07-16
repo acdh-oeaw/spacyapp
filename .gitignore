@@ -38,3 +38,7 @@ dev_secret.py
 /sample_data.xml
 /sample_data.json
 trained
+
+# dont include the local data directory
+/data
+/media
