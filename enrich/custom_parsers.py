@@ -3,14 +3,14 @@ import spacy
 from rest_framework.parsers import JSONParser
 from spacy.tokens import Doc, Token
 
-spacy_lang_lst = {
+SPACY_LANG_LST = {
     "german": "de_core_news_sm",
     "de": "de_core_news_sm",
     "deutsch": "de_core_news_sm",
     "ger": "de_core_news_sm"
 }
 
-spacy_pipeline = ['tagger', 'parser', 'ner']
+SPACY_PIPELINE = ['tagger', 'parser', 'ner']
 
 SPACY_ACCEPTED_DATA = ['POS', 'ENT_TYPE']
 
@@ -36,7 +36,11 @@ def process_tokenlist(nlp, tokenlist, enriched=False):
             t.tag_ = t_type
         for k in json['tokenArray'][id].keys():
             if k.upper() in SPACY_ACCEPTED_DATA:
-                setattr(t, k.lower(), json['tokenArray'][id][k])  # TODO: need to set ent_iob
+                setattr(
+                    t,
+                    k.lower(),
+                    json['tokenArray'][id][k],
+                )  # TODO: need to set ent_iob
     if enriched:
         for name, proc in nlp.pipeline:
             doc = proc(doc)
@@ -45,8 +49,10 @@ def process_tokenlist(nlp, tokenlist, enriched=False):
 
 class JsonToDocParser(JSONParser):
     """Parser parsing a Json into a spacy Doc element
-    Takes either a list of tokenArrays or one tokenArray, a language and a options parameter.
-    Returns either a list of docs or a single doc, a nlp element and the options
+    Takes either a list of tokenArrays or one tokenArray,
+ a language and a options parameter.
+    Returns either a list of docs or a single doc,
+ a nlp element and the options
     """
 
     media_type = "application/json+acdhlang"
@@ -66,11 +72,13 @@ class JsonToDocParser(JSONParser):
         if options:
             pipel = jmespath.search('outputproperties.pipeline', options)
             if pipel is None:
-                disable_pipeline = [x for x in spacy_pipeline]
+                disable_pipeline = [x for x in SPACY_PIPELINE]
             else:
-                disable_pipeline = [x for x in spacy_pipeline if x not in pipel]
+                disable_pipeline = [
+                    x for x in SPACY_PIPELINE if x not in pipel
+                ]
         nlp = spacy.load(
-            spacy_lang_lst[lang.lower()],
+            SPACY_LANG_LST[lang.lower()],
             disable=disable_pipeline,
         )
         token_array = json.get('tokenArray', None)
