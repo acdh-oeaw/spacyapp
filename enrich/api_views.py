@@ -272,11 +272,18 @@ class TestAgreement(APIView):
 
     @staticmethod
     def compute_agreement(text1, text2, agreement='cohen kappa', attribute='ENT_TYPE'):
+        """compute_agreement: computes the agreement between two docs
+
+        :param text1: spacy doc element
+        :param text2: spacy doc element
+        :param agreement: agreement metrics (cohen kappa or precission recall f1
+        :param attribute: the attribute of the tokens to extract (e.g POS or ENT_TYPE)
+        """
         attrib_parse = getattr(spacy.attrs, attribute, None)
         if attrib_parse is None:
             ParseError('{} is not a valid spacy attribute'.format(attribute))
-        t1 = text1.token_array(attrib_parse)
-        t2 = text2.token_array(attrib_parse)
+        t1 = text1.to_array(attrib_parse)
+        t2 = text2.to_array(attrib_parse)
         if agreement.lower() == 'cohen kappa':
             return {'cohen kappa': cohen_kappa_score(t1, t2)}
         elif agreement.lower() == 'precission recall f1':
@@ -293,6 +300,10 @@ class TestAgreement(APIView):
         """
         print(request.data)
         doc, nlp, options = request.data
+        print(type(doc))
+        for d in doc:
+            for t in d:
+                print(t.ent_type)
         if 'agreement' not in options or 'attribute' not in options:
             ParseError('agreement or attribute parameter not specified')
         if type(doc) == list:

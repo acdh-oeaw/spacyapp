@@ -12,16 +12,21 @@ spacy_lang_lst = {
 
 spacy_pipeline = ['tagger', 'parser', 'ner']
 
+SPACY_ACCEPTED_DATA = ['POS', 'ENT_TYPE']
+
 
 def process_tokenlist(nlp, tokenlist, enriched=False):
-    """ if enriched=True the created doc object runs through the nlp-processing-pipeline """
+    """process_tokenlist: creates a spacy doc element of a token list
+
+    :param nlp: spacy NLP element
+    :param tokenlist: list of dicts containing tokens and parameters
+    :param enriched: if set to True spacy pipeline is run
+    """
     json = {}
     json['tokenArray'] = tokenlist
     ar_tok = [x['value'] for x in json['tokenArray']]
     ar_wsp = [x.get('whitespace', True) for x in json['tokenArray']]
-    try:
-        Token.get_extension('tokenId')
-    except KeyError:
+    if Token.get_extension('tokenId') is None:
         Token.set_extension('tokenId', default=False)
     doc = Doc(nlp.vocab, words=ar_tok, spaces=ar_wsp)
     for id, t in enumerate(doc):
@@ -29,6 +34,9 @@ def process_tokenlist(nlp, tokenlist, enriched=False):
         t_type = json['tokenArray'][id].get('type', False)
         if not t.tag_ and t_type:
             t.tag_ = t_type
+        for k in json['tokenArray'][id].keys():
+            if k.upper() in SPACY_ACCEPTED_DATA:
+                setattr(t, k.lower(), json['tokenArray'][id][k])  # TODO: need to set ent_iob
     if enriched:
         for name, proc in nlp.pipeline:
             doc = proc(doc)
