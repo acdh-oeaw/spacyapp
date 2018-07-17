@@ -298,12 +298,7 @@ class TestAgreement(APIView):
         :param request: DRF request object containing the request to the API
         :param format:
         """
-        print(request.data)
         doc, nlp, options = request.data
-        print(type(doc))
-        for d in doc:
-            for t in d:
-                print(t.ent_type)
         if 'agreement' not in options or 'attribute' not in options:
             ParseError('agreement or attribute parameter not specified')
         if type(doc) == list:
