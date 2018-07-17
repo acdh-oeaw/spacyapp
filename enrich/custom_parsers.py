@@ -85,13 +85,5 @@ class JsonToDocParser(JSONParser):
                 return None
         else:
             doc = process_tokenlist(nlp, json['tokenArray'])
-        # ar_tok = [x['value'] for x in json['tokenArray']]
-        # ar_wsp = [x.get('whitespace', True) for x in json['tokenArray']]
-        # doc = Doc(nlp.vocab, words=ar_tok, spaces=ar_wsp)
-        # for id, t in enumerate(doc):
-        #     t._.set('tokenId', json['tokenArray'][id].get('tokenId', False))
-        #     t_type = json['tokenArray'][id].get('type', False)
-        #     if not t.tag_ and t_type:
-        #         t.tag_ = t_type
 
         return doc, nlp, options
