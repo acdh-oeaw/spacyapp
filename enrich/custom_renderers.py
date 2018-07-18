@@ -33,7 +33,7 @@ class DocToJsonRenderer(renderers.JSONRenderer):
     media_type = "application/json+acdhlang"
 
     def render(self, data, media_type=None, renderer_context=None):
-        result = doc_to_tokenlist(doc)
+        result = doc_to_tokenlist(data)
         enriched = {}
         # sents = [x for x in data.sents]
         # result = []
