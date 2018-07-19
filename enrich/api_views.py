@@ -1,21 +1,23 @@
+import datetime
+import zipfile
+from os import makedirs, listdir
+import shutil
+
 import spacy
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, schema
 from rest_framework.views import APIView
+from rest_framework.exceptions import ParseError
+from rest_framework.parsers import MultiPartParser
+from sklearn.metrics import cohen_kappa_score, precision_recall_fscore_support
+import requests
+import lxml.etree as et
+
+from enrich.spacy_utils import ner
 from enrich.custom_parsers import JsonToDocParser
 from enrich.custom_renderers import DocToJsonRenderer
-from rest_framework.parsers import MultiPartParser
-from rest_framework.exceptions import ParseError
 from .tei import TeiReader
-from enrich.spacy_utils import ner
 
-import datetime
-import zipfile
-from os import makedirs, listdir
-import requests
-import shutil
-import lxml.etree as et
-import json
 
 nlp = spacy.load('de_core_news_sm')
 
@@ -263,6 +265,53 @@ class NLPPipeline(APIView):
             }
             return Response(resp)
 
+
+class TestAgreement(APIView):
+    """TestAgreement: takes list of ACDH-lang formated Jsons and computes various agreement measures."""
+    parser_classes = (JsonToDocParser,)
+
+    @staticmethod
+    def compute_agreement(text1, text2, agreement='cohen kappa', attribute='ENT_TYPE'):
+        """compute_agreement: computes the agreement between two docs
+
+        :param text1: spacy doc element
+        :param text2: spacy doc element
+        :param agreement: agreement metrics (cohen kappa or precission recall f1
+        :param attribute: the attribute of the tokens to extract (e.g POS or ENT_TYPE)
+        """
+        attrib_parse = getattr(spacy.attrs, attribute, None)
+        if attrib_parse is None:
+            ParseError('{} is not a valid spacy attribute'.format(attribute))
+        t1 = text1.to_array(attrib_parse)
+        t2 = text2.to_array(attrib_parse)
+        if agreement.lower() == 'cohen kappa':
+            return {'cohen kappa': cohen_kappa_score(t1, t2)}
+        elif agreement.lower() == 'precission recall f1':
+            f1 = precision_recall_fscore_support(t1, t2, average='weighted')
+            return {'precission': f1[0], 'recall': f1[1], 'fbeta': f1[2], 'support': f1[3]}
+        else:
+            ParseError('agreement metrics {} not available'.format(agreement))
+
+    def post(self, request, format=None):
+        """Post request to the API
+
+        :param request: DRF request object containing the request to the API
+        :param format:
+        """
+        doc, nlp, options = request.data
+        if 'agreement' not in options or 'attribute' not in options:
+            ParseError('agreement or attribute parameter not specified')
+        if type(doc) == list:
+            if len(doc) == 2:
+                res = self.compute_agreement(doc[0], doc[1],
+                                             agreement=options['agreement'],
+                                             attribute=options['attribute'])
+                return Response(res)
+            else:
+                ParseError("You need to provide exactly two docs")
+        else:
+            ParseError("You need to provide two text docs")
+ 
 
 @api_view()
 def lemma(request):
