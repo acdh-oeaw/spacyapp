@@ -12,24 +12,14 @@ def format_iob_tag(token):
 
 
 def fetch_ner_samples(spacydoc):
+    """ takes a doc object and genereates NER-Training samples """
+    spacy_samples = []
     sents = [x for x in spacydoc.sents]
-    ent_per_sent = []
     doc = None
     for sent in sents:
         doc = nlp(sent.text)
+        spacy_sample = (sent.text, {'entities': []})
         for ent in doc.ents:
-            sample = {}
-            sample['sent'] = sent.text
-            sample['ent'] = ent.text
-            sample['start_char'] = ent.start_char
-            sample['end_char'] = ent.end_char
-            sample['label'] = ent.label_
-            sample['markup'] = sent.text.replace(ent.text, "{}"+ent.text+"{}")
-            dict_string = "|".join([
-                sent.text, ent.text, ent.label_,
-                "{}".format(ent.start_char), "{}".format(ent.end_char)
-            ])
-            hash_id = hash(dict_string)
-            sample['hash_id'] = hash_id
-            ent_per_sent.append(sample)
-    return ent_per_sent
+            spacy_sample[1]['entities'].append((ent.start_char, ent.end_char, ent.label_))
+        spacy_samples.append(spacy_sample)
+    return spacy_samples
