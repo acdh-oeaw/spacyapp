@@ -4,6 +4,7 @@ from os import makedirs, listdir
 import shutil
 
 import spacy
+from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, schema
 from rest_framework.views import APIView
@@ -150,9 +151,9 @@ class NLPPipeline(APIView):
 
     post:
     param *file*: plain/text, raw file or list of plain/text
-    param *fileType*: (string) type of file, currently only TEI,\
+    param *file_type*: (string) type of file, currently only TEI,\
     acdh-json and plain-text are supported
-    param *NLPPipeline*: (list) either list of dicts with detailed settings
+    param *nlp_pipeline*: (list) either list of dicts with detailed settings
           for every process (not implemented yet) or list of strings.
           possible settings:
                       * acdh-tokenizer|spacy-tokenizer
@@ -171,13 +172,13 @@ class NLPPipeline(APIView):
                 headers = {
                     'Content-type': 'application/xml;charset=UTF-8', 'accept': 'application/xml'
                 }
-                url = 'https://xtx.acdh.oeaw.ac.at/exist/restxq/xtx/tokenize/default'
+                url = settings.XTX_URL
                 res = requests.post(url, headers=headers, data=file.read().encode('utf8'))
         if self.file_type.lower() == 'tei':
             res_tei = TeiReader(res.text)
             res = res_tei.create_tokenlist()
         if self.pipeline[1].lower() == "treetagger-tagger":
-            url = "https://linguistictagging.eos.arz.oeaw.ac.at"
+            url = settings.TREETAGGER_URL
             headers = {'accept': 'application/json'}
             payload = {'tokenArray': res, 'language': 'german',
                        "outputproperties": {"lemma": True, "no-unknown": False}}
@@ -196,7 +197,7 @@ class NLPPipeline(APIView):
                 'options': {'outputproperties': {'pipeline': spacy_pipeline}}
             }
             res = requests.post(
-                "https://spacyapp.eos.arz.oeaw.ac.at/query/jsonparser-api/",
+                settings.JSONPARSER_URL,
                 headers=headers, json=payload
             )
             if res.status_code != 200:
@@ -216,12 +217,12 @@ class NLPPipeline(APIView):
         dwld_dir = 'download/'
         data = request.data
         print(data)
-        self.pipeline = data.get('NLPPipeline', None)
+        self.pipeline = data.get('nlp_pipeline', None)
         if self.pipeline is not None:
             self.pipeline = self.pipeline.split(',')
-        file_type = data.get('fileType', None)
+        file_type = data.get('file_type', None)
         self.file_type = file_type
-        zip_type = data.get('zipType', None)
+        zip_type = data.get('zip_type', None)
         print(zip_type)
         if zip_type is not None:
             if zip_type not in self.zip_types:
@@ -311,7 +312,7 @@ class TestAgreement(APIView):
                 ParseError("You need to provide exactly two docs")
         else:
             ParseError("You need to provide two text docs")
- 
+
 
 @api_view()
 def lemma(request):
