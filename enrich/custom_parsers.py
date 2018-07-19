@@ -12,7 +12,7 @@ SPACY_LANG_LST = {
 
 SPACY_PIPELINE = ['tagger', 'parser', 'ner']
 
-SPACY_ACCEPTED_DATA = ['POS', 'ENT_TYPE']
+SPACY_ACCEPTED_DATA = ['POS', 'ENT_TYPE', 'ENT_TYPE_']
 
 
 def process_tokenlist(nlp, tokenlist, enriched=False):
@@ -95,3 +95,4 @@ class JsonToDocParser(JSONParser):
             doc = process_tokenlist(nlp, json['tokenArray'])
 
         return doc, nlp, options
+
