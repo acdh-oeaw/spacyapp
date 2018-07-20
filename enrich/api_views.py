@@ -239,8 +239,12 @@ class NLPPipeline(APIView):
         with open(file, 'wb+') as destination:
             for chunk in f.chunks():
                 destination.write(chunk)
+        if request.user.is_authenticated:
+            user2 = request.user.pk
+        else:
+            user2 = None
         proc_files = pipe_process_files.delay(
-            self.pipeline, file, fn, None, user, zip_type, self.file_type)
+            self.pipeline, file, fn, None, user, zip_type, self.file_type, user2)
         resp = {'success': True, 'proc_id': proc_files.id}
         return Response(resp)
 

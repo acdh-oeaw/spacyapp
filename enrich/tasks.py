@@ -7,6 +7,8 @@ import lxml.etree as et
 import requests
 from celery import chord, current_task, shared_task
 from django.conf import settings
+from django.core.mail import send_mail
+from django.contrib.auth.models import User
 
 from .custom_parsers import JsonToDocParser, process_tokenlist
 from .tei import TeiReader
@@ -90,6 +92,7 @@ def pipe_zip_files(
         fld_out,
         dwld_dir,
         fn,
+        user_id=None
 ):  # TODO: use the results for zip creation
     zipf = zipfile.ZipFile(
         '{}_output.zip'.format(fn, ),
@@ -103,17 +106,29 @@ def pipe_zip_files(
         dwld_dir,
         fn.split('/', )[1],
     ))
+    path = '{}{}_output.zip'.format(dwld_dir, fn.split('/', )[1])
+    user_1 = False
+    if user_id is not None:
+        user_1 = User.objects.get(pk=user_id)
+        if user_1.email is None:
+            user_1 = False
+    if user_1:
+        message = "Your job has finished. Please download the file under: {}".format(path)
+        send_mail(
+            'Subject here',
+            message,
+            'acdh-tech@oeaw.ac.at',
+            [user_1.email,],
+            fail_silently=True,
+        )
     return {
         'success': True,
-        'path': '{}{}_output.zip'.format(
-            dwld_dir,
-            fn.split('/', )[1],
-        )
+        'path': path
     }
 
 
 @shared_task(time_limit=1800)
-def pipe_process_files(pipeline, file, fn, options, user, zip_type, file_type):
+def pipe_process_files(pipeline, file, fn, options, user, zip_type, file_type, user_id=None):
     dwld_dir = getattr(settings, "SPACYAPP_DOWNLOAD_DIR", 'download/')
     if zip_type is not None:
         makedirs('{}_folder'.format(fn))
