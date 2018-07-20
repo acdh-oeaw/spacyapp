@@ -106,24 +106,24 @@ def pipe_zip_files(
         dwld_dir,
         fn.split('/', )[1],
     ))
-    path = '{}{}_output.zip'.format(dwld_dir, fn.split('/', )[1])
+    path_2 = '{}{}_output.zip'.format(dwld_dir, fn.split('/', )[1])
     user_1 = False
     if user_id is not None:
         user_1 = User.objects.get(pk=user_id)
         if user_1.email is None:
             user_1 = False
     if user_1:
-        message = "Your job has finished. Please download the file under: {}".format(path)
+        message = "Your job has finished. Please download the file under: {}".format(path_2)
         send_mail(
-            'Subject here',
+            'spacyTEI job finished',
             message,
             'acdh-tech@oeaw.ac.at',
-            [user_1.email,],
+            [user_1.email, ],
             fail_silently=True,
         )
     return {
         'success': True,
-        'path': path
+        'path': path_2
     }
 
 
