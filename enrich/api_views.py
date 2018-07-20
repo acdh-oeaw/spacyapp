@@ -20,7 +20,7 @@ from enrich.custom_renderers import DocToJsonRenderer
 from .tei import TeiReader
 from .tasks import pipe_process_files
 from django.conf import settings
-
+from django_celery_results.models import TaskResult
 
 nlp = spacy.load('de_core_news_sm')
 
