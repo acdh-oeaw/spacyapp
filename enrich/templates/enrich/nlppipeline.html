@@ -5,28 +5,13 @@
 {% block title %} About {% endblock %}
 {% block scriptHeader %}
 {{block.super}}
-<script type="text/javascript" src="{% static 'webpage/libraries/csrf.js' %}"></script>
 {% endblock scriptHeader %}
 {% block content %}
 <div class="container">
 <form id="fileUploadForm" enctype="multipart/form-data">
-  <div class="form-group">
-    <label for="fileType">File type</label>
-    <select class="form-control" id="fileType" name="fileType" style="height: auto;">
-      <option>tei</option>
-    </select>
-    <label for="zipType">zip type</label>
-    <select class="form-control" id="zipType" name="zipType" style="height: auto;">
-      <option>zip</option>
-    </select>
-    <label for="NLPPipeline">NLP pipeline</label>
-    <input class="form-control" id="NLPPipeline" name="NLPPipeline" style="height: auto;" value="acdh-tokenizer,spacy-tagger,spacy-parser,spacy-ner" />
-    <p class="help-block">comma seperated values of ACDH NLP pipeline</p>
-          <label for="file">Upload a file to the ACDH-NLP pipeline</label>
-          <input class="form-control" type="file" id="file" name="file" style="height: auto;" />
-          <p class="help-block">zip of TEIs or single TEI</p>
-        </div>
-      <button type="submit" name="uploadp_btn" class="btn btn-primary" id="btnSubmit">Upload!</button>
+    {% crispy form %}
+
+    <button type="submit" name="uploadp_btn" class="btn btn-primary" id="btnSubmit">Upload!</button>
 </form>
 <hr/>
 <div id="results">
@@ -66,7 +51,7 @@ $(document).ready(function () {
             timeout: 0,
             success: function (data) {
 
-                $("#res_table").append('<td><a href="/'+data.download+'"</a>'+data.download+'</td>');
+                $("#res_table").append('<td><a href="/query/download/'+data.proc_id+'"</a>'+data.proc_id+'</td>');
                 console.log("SUCCESS : ", data);
                 $("#btnSubmit").prop("disabled", false);
 
@@ -77,7 +62,11 @@ $(document).ready(function () {
                 console.log("ERROR : ", e);
                 $("#btnSubmit").prop("disabled", false);
 
-            }
+            },
+	    beforeSend: function(request) {
+		    var csrftoken = getCookie('csrftoken');
+		    request.setRequestHeader("X-CSRFToken", csrftoken);
+	    }
         });
 
     });

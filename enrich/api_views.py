@@ -1,21 +1,26 @@
-import spacy
-from rest_framework.response import Response
-from rest_framework.decorators import api_view, schema
-from rest_framework.views import APIView
-from enrich.custom_parsers import JsonToDocParser
-from enrich.custom_renderers import DocToJsonRenderer
-from rest_framework.parsers import MultiPartParser
-from rest_framework.exceptions import ParseError
-from .tei import TeiReader
-from enrich.spacy_utils import ner
-
 import datetime
 import zipfile
 from os import makedirs, listdir
-import requests
 import shutil
+
+import spacy
+from django.conf import settings
+from rest_framework.response import Response
+from rest_framework.decorators import api_view, schema
+from rest_framework.views import APIView
+from rest_framework.exceptions import ParseError
+from rest_framework.parsers import MultiPartParser
+from sklearn.metrics import cohen_kappa_score, precision_recall_fscore_support
+import requests
 import lxml.etree as et
-import json
+
+from enrich.spacy_utils import ner
+from enrich.custom_parsers import JsonToDocParser
+from enrich.custom_renderers import DocToJsonRenderer
+from .tei import TeiReader
+from .tasks import pipe_process_files
+from django.conf import settings
+from django_celery_results.models import TaskResult
 
 nlp = spacy.load('de_core_news_sm')
 
@@ -148,9 +153,9 @@ class NLPPipeline(APIView):
 
     post:
     param *file*: plain/text, raw file or list of plain/text
-    param *fileType*: (string) type of file, currently only TEI,\
+    param *file_type*: (string) type of file, currently only TEI,\
     acdh-json and plain-text are supported
-    param *NLPPipeline*: (list) either list of dicts with detailed settings
+    param *nlp_pipeline*: (list) either list of dicts with detailed settings
           for every process (not implemented yet) or list of strings.
           possible settings:
                       * acdh-tokenizer|spacy-tokenizer
@@ -169,13 +174,13 @@ class NLPPipeline(APIView):
                 headers = {
                     'Content-type': 'application/xml;charset=UTF-8', 'accept': 'application/xml'
                 }
-                url = 'https://xtx.acdh.oeaw.ac.at/exist/restxq/xtx/tokenize/default'
+                url = settings.XTX_URL
                 res = requests.post(url, headers=headers, data=file.read().encode('utf8'))
         if self.file_type.lower() == 'tei':
             res_tei = TeiReader(res.text)
             res = res_tei.create_tokenlist()
         if self.pipeline[1].lower() == "treetagger-tagger":
-            url = "https://linguistictagging.eos.arz.oeaw.ac.at"
+            url = settings.TREETAGGER_URL
             headers = {'accept': 'application/json'}
             payload = {'tokenArray': res, 'language': 'german',
                        "outputproperties": {"lemma": True, "no-unknown": False}}
@@ -194,7 +199,7 @@ class NLPPipeline(APIView):
                 'options': {'outputproperties': {'pipeline': spacy_pipeline}}
             }
             res = requests.post(
-                "https://spacyapp.eos.arz.oeaw.ac.at/query/jsonparser-api/",
+                settings.JSONPARSER_URL,
                 headers=headers, json=payload
             )
             if res.status_code != 200:
@@ -210,58 +215,85 @@ class NLPPipeline(APIView):
         return res
 
     def post(self, request, format=None):
-        tmp_dir = 'tmp/'
-        dwld_dir = 'download/'
         data = request.data
-        print(data)
-        self.pipeline = data.get('NLPPipeline', None)
+        tmp_dir = getattr(settings, "SPACYAPP_TEMP_DIR", 'tmp/')
+        self.pipeline = data.get('nlp_pipeline', None)
         if self.pipeline is not None:
             self.pipeline = self.pipeline.split(',')
-        file_type = data.get('fileType', None)
+        file_type = data.get('file_type', None)
         self.file_type = file_type
-        zip_type = data.get('zipType', None)
-        print(zip_type)
+        zip_type = data.get('zip_type', None)
         if zip_type is not None:
             if zip_type not in self.zip_types:
                 raise ParseError(detail='zip type not supported')
         if file_type.lower() not in self.file_types:
             raise ParseError(detail='file type not supported')
         f = data.get('file')
-        print(f)
-        fn_orig = str(f)
-        ts = datetime.datetime.now().strftime('%Y-%m-%d_%H_%M_%S')
         user = request.user.get_username()
         if len(user) == 0 or user is None:
             user = 'anonymous'
+        fn_orig = str(f)
+        ts = datetime.datetime.now().strftime('%Y-%m-%d_%H_%M_%S')
         fn = '{}{}_{}'.format(tmp_dir, user, ts)
-        with open('{}.{}'.format(fn, fn_orig.split('.')[1]), 'wb+') as destination:
+        file = '{}.{}'.format(fn, fn_orig.split('.')[1])
+        with open(file, 'wb+') as destination:
             for chunk in f.chunks():
                 destination.write(chunk)
-        if zip_type is not None:
-            makedirs('{}{}_{}_folder'.format(tmp_dir, user, ts))
-            makedirs('{}{}_{}_output'.format(tmp_dir, user, ts))
-            zip_ref = zipfile.ZipFile('{}{}_{}.{}'.format(
-                tmp_dir, user, ts, fn_orig.split('.')[1]), 'r'
-            )
-            zip_ref.extractall('{}{}_{}_folder'.format(tmp_dir, user, ts))
-            zip_ref.close()
-            for filename in listdir('{}{}_{}_folder'.format(tmp_dir, user, ts)):
-                res = self.process_file('{}{}_{}_folder/{}'.format(tmp_dir, user, ts, filename))
-                with open('{}{}_{}_output/{}'.format(tmp_dir, user, ts, filename), 'wb') as out:
-                    # out.write(res.text)
-                    out.write(res)
-            zipf = zipfile.ZipFile('{}_output.zip'.format(fn), 'w', zipfile.ZIP_DEFLATED)
-            for filename in listdir('{}{}_{}_output'.format(tmp_dir, user, ts)):
-                zipf.write('{}{}_{}_output/{}'.format(tmp_dir, user, ts, filename))
-            zipf.close()
-            shutil.copy(
-                '{}_output.zip'.format(fn), '{}{}_output.zip'.format(dwld_dir, fn.split('/')[1])
-            )
-            resp = {
-                'status': 'finished',
-                'download': '{}{}_output.zip'.format(dwld_dir, fn.split('/')[1])
-            }
-            return Response(resp)
+        if request.user.is_authenticated:
+            user2 = request.user.id
+        else:
+            user2 = None
+        proc_files = pipe_process_files.delay(
+            self.pipeline, file, fn, None, user, zip_type, self.file_type, user2)
+        resp = {'success': True, 'proc_id': proc_files.id}
+        return Response(resp)
+
+
+class TestAgreement(APIView):
+    """TestAgreement: takes list of ACDH-lang formated Jsons and computes various agreement measures."""
+    parser_classes = (JsonToDocParser,)
+
+    @staticmethod
+    def compute_agreement(text1, text2, agreement='cohen kappa', attribute='ENT_TYPE'):
+        """compute_agreement: computes the agreement between two docs
+
+        :param text1: spacy doc element
+        :param text2: spacy doc element
+        :param agreement: agreement metrics (cohen kappa or precission recall f1
+        :param attribute: the attribute of the tokens to extract (e.g POS or ENT_TYPE)
+        """
+        attrib_parse = getattr(spacy.attrs, attribute, None)
+        if attrib_parse is None:
+            ParseError('{} is not a valid spacy attribute'.format(attribute))
+        t1 = text1.to_array(attrib_parse)
+        t2 = text2.to_array(attrib_parse)
+        if agreement.lower() == 'cohen kappa':
+            return {'cohen kappa': cohen_kappa_score(t1, t2)}
+        elif agreement.lower() == 'precission recall f1':
+            f1 = precision_recall_fscore_support(t1, t2, average='weighted')
+            return {'precission': f1[0], 'recall': f1[1], 'fbeta': f1[2], 'support': f1[3]}
+        else:
+            ParseError('agreement metrics {} not available'.format(agreement))
+
+    def post(self, request, format=None):
+        """Post request to the API
+
+        :param request: DRF request object containing the request to the API
+        :param format:
+        """
+        doc, nlp, options = request.data
+        if 'agreement' not in options or 'attribute' not in options:
+            ParseError('agreement or attribute parameter not specified')
+        if type(doc) == list:
+            if len(doc) == 2:
+                res = self.compute_agreement(doc[0], doc[1],
+                                             agreement=options['agreement'],
+                                             attribute=options['attribute'])
+                return Response(res)
+            else:
+                ParseError("You need to provide exactly two docs")
+        else:
+            ParseError("You need to provide two text docs")
 
 
 @api_view()

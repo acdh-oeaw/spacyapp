@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'webpage',
     'enrich',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'django_celery_results'
 ]
 
 CRISPY_TEMPLATE_PACK = "bootstrap3"
@@ -126,3 +127,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles/')
 STATIC_URL = '/static/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 MEDIA_URL = '/media/'
+
+XTX_URL = "https://xtx.acdh.oeaw.ac.at/exist/restxq/xtx/tokenize/default"
+TREETAGGER_URL = "https://linguistictagging.eos.arz.oeaw.ac.at"
+JSONPARSER_URL = "https://spacyapp.eos.arz.oeaw.ac.at/query/jsonparser-api/"

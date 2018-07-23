@@ -1,10 +1,13 @@
 import spacy
+import json
 from spacy import displacy
 from rest_framework.decorators import api_view
 from django.shortcuts import render
 from django.views.generic.edit import FormView
-from .forms import TokenForm, LongTextForm
+from django.views.generic.base import TemplateView 
+from .forms import TokenForm, LongTextForm, NLPPipeForm
 from django.shortcuts import render_to_response
+from django_celery_results.models import TaskResult
 
 nlp = spacy.load('de_core_news_sm')
 
@@ -63,5 +66,31 @@ class Lemmatize(FormView):
         return render(self.request, self.template_name, context)
 
 
-def NLPPipelineView(request):
-    return render_to_response('enrich/nlppipeline.html')
+class NLPPipeView(FormView):
+    template_name = 'enrich/nlppipeline.html'
+    form_class = NLPPipeForm
+    success_url = '.'
+
+
+class DownloadView(TemplateView):
+    template_name = 'enrich/download.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tt = TaskResult.objects.get(task_id=context['proc_id'])
+        t = False
+        if tt.status == 'SUCCESS':
+            try:
+                t = TaskResult.objects.get(task_id=json.loads(tt.result)['id_docs'])
+            except TaskResult.DoesNotExist:
+                t = False
+        if t:
+            if t.status == 'SUCCESS':
+                p = json.loads(t.result)['path']
+                context['finished'] = True
+                context['path'] = p
+            else:
+                context['finished'] = False
+        else:
+            context['finished'] = False
+        return context

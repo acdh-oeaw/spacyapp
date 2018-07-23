@@ -1,19 +1,23 @@
 import lxml.etree as ET
+import time
+import datetime
 
 ns_tei = {'tei': "http://www.tei-c.org/ns/1.0"}
 ns_xml = {'xml': "http://www.w3.org/XML/1998/namespace"}
 
 
-class TeiReader():
+class XMLReader():
 
     """ a class to read an process tei-documents"""
 
     def __init__(self, xml):
         self.ns_tei = {'tei': "http://www.tei-c.org/ns/1.0"}
         self.ns_xml = {'xml': "http://www.w3.org/XML/1998/namespace"}
+        self.ns_tcf = {'tcf': "http://www.dspin.de/data/textcorpus"}
         self.nsmap = {
             'tei': "http://www.tei-c.org/ns/1.0",
-            'xml': "http://www.w3.org/XML/1998/namespace"
+            'xml': "http://www.w3.org/XML/1998/namespace",
+            'tcf': "http://www.dspin.de/data/textcorpus"
         }
         self.file = xml
         try:
@@ -28,6 +32,24 @@ class TeiReader():
             self.parsed_file = ET.tostring(self.tree, encoding="utf-8")
         except:
             self.parsed_file = "parsing didn't work"
+
+    def tree_to_file(self, file=None):
+        """saves current tree to file"""
+        import lxml.etree as ET
+        if file:
+            pass
+        else:
+            timestamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d-%H-%M-%S')
+            file = "{}.xml".format(timestamp)
+
+        with open(file, 'wb') as f:
+            f.write(ET.tostring(self.tree))
+        return file
+
+
+class TeiReader(XMLReader):
+
+    """ a class to read an process tei-documents"""
 
     def create_tokenlist(self):
 
@@ -53,7 +75,7 @@ class TeiReader():
 
     def process_tokenlist(self, tokenlist):
 
-        """ takes a tokenlist and writes updated the tei:w tags. Returns the updated self.tree """
+        """ takes a tokenlist and updated the tei:w tags. Returns the updated self.tree """
 
         expr = './/tei:w[@xml:id=$xmlid]'
         for x in tokenlist:

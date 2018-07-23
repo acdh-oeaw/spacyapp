@@ -37,3 +37,8 @@ dev_secret.py
 /play.ipynb
 /sample_data.xml
 /sample_data.json
+trained
+
+# dont include the local data directory
+/data
+/media
