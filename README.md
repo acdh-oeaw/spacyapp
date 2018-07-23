@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/117106015.svg)](https://zenodo.org/badge/latestdoi/117106015)
+
 # nlp - An NLP-App/Service
 
 spacyapp is a NLP service provided by [ACDH](https://acdh.oeaw.ac.at). It is built around [spaCy](https://spacy.io), but extends spacys functionalities and provides an easy to use webservice.
