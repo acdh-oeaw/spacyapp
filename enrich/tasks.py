@@ -117,7 +117,7 @@ def pipe_zip_files(
     if user_1:
         message = "Your job has finished. Please download the file under: {}".format(path_2)
         html_message = """<p>Your job has finished.<b/>
-        Please download the file under: <a href="{}">{}</a></p>""".format(path_2)
+        Please download the file under: <a href="{0}">{0}</a></p>""".format(path_2)
         send_mail(
             'spacyTEI job finished',
             message,
