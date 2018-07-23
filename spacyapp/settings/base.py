@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'webpage',
     'enrich',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'django_celery_results'
 ]
 
 CRISPY_TEMPLATE_PACK = "bootstrap3"

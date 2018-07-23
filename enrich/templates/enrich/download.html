@@ -1,0 +1,11 @@
+{% extends "webpage/base.html" %}
+{% load staticfiles %}
+{% load crispy_forms_tags %}
+{% load webpage_extras %}
+{% block title %} Download processed File {% endblock %}
+{% block content %}
+{% if finished %}
+<a href="/{{path}}">{{path}}</a>
+{% else  %}<p>Not finished yet</p>
+{% endif %}
+{% endblock content %}

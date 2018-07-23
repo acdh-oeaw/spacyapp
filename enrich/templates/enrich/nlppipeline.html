@@ -51,7 +51,7 @@ $(document).ready(function () {
             timeout: 0,
             success: function (data) {
 
-                $("#res_table").append('<td><a href="/'+data.download+'"</a>'+data.download+'</td>');
+                $("#res_table").append('<td><a href="/query/download/'+data.proc_id+'"</a>'+data.proc_id+'</td>');
                 console.log("SUCCESS : ", data);
                 $("#btnSubmit").prop("disabled", false);
 
@@ -62,7 +62,11 @@ $(document).ready(function () {
                 console.log("ERROR : ", e);
                 $("#btnSubmit").prop("disabled", false);
 
-            }
+            },
+	    beforeSend: function(request) {
+		    var csrftoken = getCookie('csrftoken');
+		    request.setRequestHeader("X-CSRFToken", csrftoken);
+	    }
         });
 
     });

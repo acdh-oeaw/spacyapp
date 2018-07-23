@@ -18,7 +18,9 @@ from enrich.spacy_utils import ner
 from enrich.custom_parsers import JsonToDocParser
 from enrich.custom_renderers import DocToJsonRenderer
 from .tei import TeiReader
-
+from .tasks import pipe_process_files
+from django.conf import settings
+from django_celery_results.models import TaskResult
 
 nlp = spacy.load('de_core_news_sm')
 
@@ -213,58 +215,38 @@ class NLPPipeline(APIView):
         return res
 
     def post(self, request, format=None):
-        tmp_dir = 'tmp/'
-        dwld_dir = 'download/'
         data = request.data
-        print(data)
+        tmp_dir = getattr(settings, "SPACYAPP_TEMP_DIR", 'tmp/')
         self.pipeline = data.get('nlp_pipeline', None)
         if self.pipeline is not None:
             self.pipeline = self.pipeline.split(',')
         file_type = data.get('file_type', None)
         self.file_type = file_type
         zip_type = data.get('zip_type', None)
-        print(zip_type)
         if zip_type is not None:
             if zip_type not in self.zip_types:
                 raise ParseError(detail='zip type not supported')
         if file_type.lower() not in self.file_types:
             raise ParseError(detail='file type not supported')
         f = data.get('file')
-        print(f)
-        fn_orig = str(f)
-        ts = datetime.datetime.now().strftime('%Y-%m-%d_%H_%M_%S')
         user = request.user.get_username()
         if len(user) == 0 or user is None:
             user = 'anonymous'
+        fn_orig = str(f)
+        ts = datetime.datetime.now().strftime('%Y-%m-%d_%H_%M_%S')
         fn = '{}{}_{}'.format(tmp_dir, user, ts)
-        with open('{}.{}'.format(fn, fn_orig.split('.')[1]), 'wb+') as destination:
+        file = '{}.{}'.format(fn, fn_orig.split('.')[1])
+        with open(file, 'wb+') as destination:
             for chunk in f.chunks():
                 destination.write(chunk)
-        if zip_type is not None:
-            makedirs('{}{}_{}_folder'.format(tmp_dir, user, ts))
-            makedirs('{}{}_{}_output'.format(tmp_dir, user, ts))
-            zip_ref = zipfile.ZipFile('{}{}_{}.{}'.format(
-                tmp_dir, user, ts, fn_orig.split('.')[1]), 'r'
-            )
-            zip_ref.extractall('{}{}_{}_folder'.format(tmp_dir, user, ts))
-            zip_ref.close()
-            for filename in listdir('{}{}_{}_folder'.format(tmp_dir, user, ts)):
-                res = self.process_file('{}{}_{}_folder/{}'.format(tmp_dir, user, ts, filename))
-                with open('{}{}_{}_output/{}'.format(tmp_dir, user, ts, filename), 'wb') as out:
-                    # out.write(res.text)
-                    out.write(res)
-            zipf = zipfile.ZipFile('{}_output.zip'.format(fn), 'w', zipfile.ZIP_DEFLATED)
-            for filename in listdir('{}{}_{}_output'.format(tmp_dir, user, ts)):
-                zipf.write('{}{}_{}_output/{}'.format(tmp_dir, user, ts, filename))
-            zipf.close()
-            shutil.copy(
-                '{}_output.zip'.format(fn), '{}{}_output.zip'.format(dwld_dir, fn.split('/')[1])
-            )
-            resp = {
-                'status': 'finished',
-                'download': '{}{}_output.zip'.format(dwld_dir, fn.split('/')[1])
-            }
-            return Response(resp)
+        if request.user.is_authenticated:
+            user2 = request.user.id
+        else:
+            user2 = None
+        proc_files = pipe_process_files.delay(
+            self.pipeline, file, fn, None, user, zip_type, self.file_type, user2)
+        resp = {'success': True, 'proc_id': proc_files.id}
+        return Response(resp)
 
 
 class TestAgreement(APIView):
