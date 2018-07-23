@@ -115,9 +115,12 @@ def pipe_zip_files(
         if user_1.email is None:
             user_1 = False
     if user_1:
-        message = "Your job has finished. Please download the file under: {}".format(path_2)
-        html_message = """<p>Your job has finished.<b/>
-        Please download the file under: <a href="{0}">{0}</a></p>""".format(path_2)
+        message = """Your job has finished. 
+        Please download the file under: 
+            https://spacyapp.eos.arz.oeaw.ac.at/{}""".format(path_2)
+        html_message = """<p>Your job has finished.<br/>
+        <b>Please download the file under:</b> 
+            <a href="https://spacyapp.eos.arz.oeaw.ac.at/{0}">{0}</a></p>""".format(path_2)
         send_mail(
             'spacyTEI job finished',
             message,
@@ -125,7 +128,7 @@ def pipe_zip_files(
             [user_1.email, ],
             fail_silently=True,
             html_message=html_message
-        )
+        )  # TODO: Make the base url not hard coded
     return {
         'success': True,
         'path': path_2
