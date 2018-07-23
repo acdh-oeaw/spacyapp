@@ -69,6 +69,8 @@ def process_file(file, pipeline, file_type, fld_out):
         if res.status_code != 200:
             print(res.text)
             res = res.text
+            return {'success': False,
+                    'error': res}
         else:
             res = res.json()
             res1 = [x['tokens'] for x in res['result']]
@@ -109,17 +111,20 @@ def pipe_zip_files(
     path_2 = '{}{}_output.zip'.format(dwld_dir, fn.split('/', )[1])
     user_1 = False
     if user_id is not None:
-        user_1 = User.objects.get(pk=user_id)
+        user_1 = User.objects.get(id=int(user_id))
         if user_1.email is None:
             user_1 = False
     if user_1:
         message = "Your job has finished. Please download the file under: {}".format(path_2)
+        html_message = """<p>Your job has finished.<b/>
+        Please download the file under: <a href="{}">{}</a></p>""".format(path_2)
         send_mail(
             'spacyTEI job finished',
             message,
             'acdh-tech@oeaw.ac.at',
             [user_1.email, ],
             fail_silently=True,
+            html_message=html_message
         )
     return {
         'success': True,
@@ -142,7 +147,7 @@ def pipe_process_files(pipeline, file, fn, options, user, zip_type, file_type, u
         res_group = chord(
             process_file.s(
                 path.join(fld_proc, fn), pipeline, file_type, fld_out)
-            for fn in lst_dir)(pipe_zip_files.s(fld_out, dwld_dir, fn))
+            for fn in lst_dir)(pipe_zip_files.s(fld_out, dwld_dir, fn, user_id))
         return {
             'success': True,
             'id_docs': res_group.id,

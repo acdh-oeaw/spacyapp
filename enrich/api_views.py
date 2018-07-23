@@ -240,7 +240,7 @@ class NLPPipeline(APIView):
             for chunk in f.chunks():
                 destination.write(chunk)
         if request.user.is_authenticated:
-            user2 = request.user.pk
+            user2 = request.user.id
         else:
             user2 = None
         proc_files = pipe_process_files.delay(

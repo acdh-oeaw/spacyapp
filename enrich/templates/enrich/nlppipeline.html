@@ -62,7 +62,11 @@ $(document).ready(function () {
                 console.log("ERROR : ", e);
                 $("#btnSubmit").prop("disabled", false);
 
-            }
+            },
+	    beforeSend: function(request) {
+		    var csrftoken = getCookie('csrftoken');
+		    request.setRequestHeader("X-CSRFToken", csrftoken);
+	    }
         });
 
     });
