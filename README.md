@@ -11,7 +11,7 @@ Our service is currently under heavy development, but it provides so far:
 	- accepts a ZIP of TEI documents
 	- uses the [xtx](https://xtx.acdh.oeaw.ac.at/index.html) tokenizer developed at [ACDH](https://acdh.oeaw.ac.at) to tokenize TEI documents while preserving existing tags
 	- allows to choose between a [Treetagger based service](https://linguistictagging.eos.arz.oeaw.ac.at/) - also developed at [ACDH](https://acdh.oeaw.ac.at) - and [spaCy](https://spacy.io) for POS tagging
-	- provides the processed files as TEI
+	- provides the processed files as zipped TEIs
 	- informs users logged in via email that their job is finished (processing a lot of TEI files can take a while)
 
 Have a look at https://spacyapp.acdh.oeaw.ac.at/ for a running version
