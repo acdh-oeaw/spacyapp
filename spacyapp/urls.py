@@ -17,6 +17,7 @@ urlpatterns = [
 
 if 'spacyal' in settings.INSTALLED_APPS:
     urlpatterns.append(
-        path('spacyal_api/', include('spacyal.api_urls')),
-        path('spacyal/', include('spacyal.urls'))
+        path('spacyal_api/', include('spacyal.api_urls'))
     )
+    urlpatterns.append(
+        path('spacyal/', include('spacyal.urls')))
