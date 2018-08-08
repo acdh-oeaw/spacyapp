@@ -73,7 +73,7 @@ def process_file(file, pipeline, file_type, fld_out):
             }
         }
         res = requests.post(
-            "http://127.0.0.1:8000/query/jsonparser-api/",
+            "https://spacyapp.acdh.oeaw.ac.at/query/jsonparser-api/",
             headers=headers,
             json=payload)
         if res.status_code != 200:
