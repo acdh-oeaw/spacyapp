@@ -2,6 +2,7 @@ import datetime
 import zipfile
 from os import makedirs, listdir
 import shutil
+import ast
 
 import spacy
 from django.conf import settings
@@ -219,7 +220,8 @@ class NLPPipeline(APIView):
         tmp_dir = getattr(settings, "SPACYAPP_TEMP_DIR", 'tmp/')
         self.pipeline = data.get('nlp_pipeline', None)
         if self.pipeline is not None:
-            self.pipeline = self.pipeline.split(',')
+            self.pipeline = ast.literal_eval(self.pipeline)
+        print(self.pipeline)
         file_type = data.get('file_type', None)
         self.file_type = file_type
         zip_type = data.get('zip_type', None)

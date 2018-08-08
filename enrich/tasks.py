@@ -16,27 +16,31 @@ from .tei import TeiReader
 
 @shared_task(time_limit=1000)
 def process_file(file, pipeline, file_type, fld_out):
-    if file_type.lower() == 'tei' and pipeline[0].lower() == 'acdh-tokenizer':
+    if file_type.lower() == 'tei' and pipeline[0][0].lower() == 'acdh-tokenizer':
+        profile = pipeline[0][1].get('profile', 'default')
         with open(file, 'r', encoding='utf-8') as file_str:
             headers = {
                 'Content-type': 'application/xml;charset=UTF-8',
                 'accept': 'application/xml'
             }
-            url = 'https://xtx.acdh.oeaw.ac.at/exist/restxq/xtx/tokenize/default'
+            url = 'https://xtx.acdh.oeaw.ac.at/exist/restxq/xtx/tokenize/{}'.format(profile)
             res = requests.post(
                 url, headers=headers, data=file_str.read().encode('utf8', ))
     if file_type.lower() == 'tei':
         res_tei = TeiReader(res.text)
         res = res_tei.create_tokenlist()
-    if pipeline[1].lower() == "treetagger-tagger":
+    if pipeline[1][0].lower() == "treetagger-tagger":
         url = "https://linguistictagging.eos.arz.oeaw.ac.at"
         headers = {'accept': 'application/json'}
+        language = pipeline[1][1].get('language', 'german')
+        lemma = pipeline[1][1].get('lemma', True)
+        nounknown = pipeline[1][1].get('nounknown', False)
         payload = {
             'tokenArray': res,
-            'language': 'german',
+            'language': language,
             "outputproperties": {
-                "lemma": True,
-                "no-unknown": False
+                "lemma": lemma,
+                "no-unknown": nounknown
             }
         }
         res = requests.post(url, headers=headers, json=payload)
@@ -46,16 +50,22 @@ def process_file(file, pipeline, file_type, fld_out):
         else:
             res = res.json()['tokenArray']
     spacy_pipeline = [
-        x.split('-', )[1] for x in pipeline if x.startswith('spacy', )
+        x[0].split('-', )[1] for x in pipeline if x[0].startswith('spacy')
     ]
+    spacy_options = [x[1] for x in pipeline if x[0].startswith('spacy')]
     if spacy_pipeline:
         headers = {
             'content-type': "application/json+acdhlang",
             'accept': "application/json+acdhlang"
         }
+        language = spacy_options[0].get('language', 'german')
+        modell = spacy_options[0].get('modell', None)
+        named_entities = spacy_options[0].get('named_entities', None)
         payload = {
             'tokenArray': res,
-            'language': 'german',
+            'language': language,
+            'modell': modell,
+            'named_entities': named_entities,
             'options': {
                 'outputproperties': {
                     'pipeline': spacy_pipeline
@@ -63,7 +73,7 @@ def process_file(file, pipeline, file_type, fld_out):
             }
         }
         res = requests.post(
-            "https://spacyapp.eos.arz.oeaw.ac.at/query/jsonparser-api/",
+            "http://127.0.0.1:8000/query/jsonparser-api/",
             headers=headers,
             json=payload)
         if res.status_code != 200:
