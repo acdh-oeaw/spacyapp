@@ -30,7 +30,7 @@ class NLPPipeForm(forms.Form):
         choices=ZIP_CHOICES
     )
     nlp_pipeline = forms.CharField(
-        initial='acdh-tokenizer,spacy-tagger,spacy-parser,spacy-ner'
+        initial="[('acdh-tokenizer', {'profile': 'default'}),('spacy-tagger', {'language': 'de'}),('spacy-parser', {}),('spacy-ner', {})]"
     )
     file = forms.FileField()
 

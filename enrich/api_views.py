@@ -2,6 +2,7 @@ import datetime
 import zipfile
 from os import makedirs, listdir
 import shutil
+import ast
 
 import spacy
 from django.conf import settings
@@ -196,7 +197,7 @@ class NLPPipeline(APIView):
                        'accept': "application/json+acdhlang"}
             payload = {
                 'tokenArray': res, 'language': 'german',
-                'options': {'outputproperties': {'pipeline': spacy_pipeline}}
+                'pipeline': spacy_pipeline
             }
             res = requests.post(
                 settings.JSONPARSER_URL,
@@ -219,7 +220,8 @@ class NLPPipeline(APIView):
         tmp_dir = getattr(settings, "SPACYAPP_TEMP_DIR", 'tmp/')
         self.pipeline = data.get('nlp_pipeline', None)
         if self.pipeline is not None:
-            self.pipeline = self.pipeline.split(',')
+            self.pipeline = ast.literal_eval(self.pipeline)
+        print(self.pipeline)
         file_type = data.get('file_type', None)
         self.file_type = file_type
         zip_type = data.get('zip_type', None)
@@ -276,7 +278,7 @@ class TestAgreement(APIView):
             ParseError('agreement metrics {} not available'.format(agreement))
 
     def post(self, request, format=None):
-        """Post request to the API
+        """Post request to the API.
 
         :param request: DRF request object containing the request to the API
         :param format:
