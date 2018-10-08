@@ -72,16 +72,15 @@ class JsonToDocParser(JSONParser):
         )
         lang = json.get("language", "german")
         options = json.get("options", False)
-        modell = json.get("modell", None)
+        modell = json.get("model", None)
         disable_pipeline = []
-        if options:
-            pipel = jmespath.search('outputproperties.pipeline', options)
-            if pipel is None:
-                disable_pipeline = [x for x in SPACY_PIPELINE]
-            else:
-                disable_pipeline = [
-                    x for x in SPACY_PIPELINE if x not in pipel
-                ]
+        pipel = json.get('pipeline', None)
+        if pipel is None:
+            disable_pipeline = [x for x in SPACY_PIPELINE]
+        else:
+            disable_pipeline = [
+                x for x in SPACY_PIPELINE if x not in pipel
+            ]
         if modell is None:
             modell = SPACY_LANG_LST[lang.lower()]
         else:

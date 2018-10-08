@@ -197,7 +197,7 @@ class NLPPipeline(APIView):
                        'accept': "application/json+acdhlang"}
             payload = {
                 'tokenArray': res, 'language': 'german',
-                'options': {'outputproperties': {'pipeline': spacy_pipeline}}
+                'pipeline': spacy_pipeline
             }
             res = requests.post(
                 settings.JSONPARSER_URL,
@@ -278,7 +278,7 @@ class TestAgreement(APIView):
             ParseError('agreement metrics {} not available'.format(agreement))
 
     def post(self, request, format=None):
-        """Post request to the API
+        """Post request to the API.
 
         :param request: DRF request object containing the request to the API
         :param format:
