@@ -1,9 +1,10 @@
   {
    "definitions": {},
    "$schema": "http://json-schema.org/draft-07/schema#",
-   "$id": "http://example.com/root.json",
+   "$id": "http://acdh.oeaw.ac.at/vocabs/acdh-lang.json",
    "type": "object",
-   "title": "The Root Schema",
+   "title": "The ACDH language json format",
+   "description": "json format used for internal communication of ACDH language services",
    "required": [
      "tokenArray",
      "language"
