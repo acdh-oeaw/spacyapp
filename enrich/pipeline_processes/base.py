@@ -2,6 +2,7 @@
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 import json
+import spacy
 
 
 def check_validity_payload(kind, payload):
@@ -13,8 +14,11 @@ def check_validity_payload(kind, payload):
                 return True
             except ValidationError:
                 return False
-    else:
-        return True
+    elif kind == "spacyDoc":
+        if type(payload) == spacy.tokens.doc.Doc:
+            return True
+        else:
+            return False
 
 
 class PipelineProcessBase:
