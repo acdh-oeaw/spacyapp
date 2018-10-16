@@ -9,6 +9,7 @@
      "tokenArray",
      "language"
    ],
+   "additionalProperties": false,
    "properties": {
      "tokenArray": {
        "$id": "#/properties/tokenArray",
