@@ -26,6 +26,8 @@ class Converter:
         return self.data_converted
 
     def __init__(self, data_type=None, data=None):
+        if data_type not in mapping_converters['from'].keys():
+            raise ValueError('Data type specified is not supported by the converter.')
         if not check_validity_payload(data_type, data):
             raise ValueError('Payload has not the specified format.')
         if data_type == 'application/json+acdhlang':
