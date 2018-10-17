@@ -6,13 +6,20 @@ def doc_to_tokenlist(doc):
     sents = [x for x in doc.sents]
     result = []
     counter = 0
+    if doc.has_extension('tokenId'):
+        tokenId = True
+    else:
+        tokenId = False
     for x in sents:
         chunk = {}
         chunk['sent'] = "{}".format(x)
         chunk['tokens'] = []
         for y in x:
             parts = {}
-            parts['tokenId'] = y._.tokenId
+            if tokenId:
+                parts['tokenId'] = y._.tokenId
+            else:
+                parts['tokenId'] = y.i
             parts['value'] = y.text
             parts['lemma'] = y.lemma_
             parts['pos'] = y.pos_
