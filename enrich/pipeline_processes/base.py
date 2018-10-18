@@ -36,6 +36,7 @@ class PipelineProcessBase:
     
     def convert_payload(self):
         self.payload = Converter(data_type=self.mime, data=self.payload, original_process=self).convert(to=self.accepts[0])
+        print('payload converted: {}'.format(self.payload))
         self.mime = self.accepts[0]
         self.check_validity()
 
@@ -53,14 +54,15 @@ class PipelineProcessBase:
             self.convert_payload()
         self.valid = True
 
-    def __init__(self, payload=None, mime=None):
+    def __init__(self, **kwargs):
         """__init__
 
         :param payload: data for the process
         :param mime: mime type of the payload data
         """
-        self.payload = payload
-        self.mime = mime
+        self.payload = kwargs.get('payload', None)
+        self.mime = kwargs.get('mime', None)
+        print('payload: {}'.format(self.payload))
         self.check_validity()
 
 
