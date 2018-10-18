@@ -56,6 +56,7 @@ class Converter:
 
     def convert(self, to):
         self.data_converted = self._convert_internal('to', to)
+        return self.data_converted
     
     def __init__(self, data_type=None, data=None, original_process=None):
         if data_type not in MAPPING_CONVERTERS['from'].keys() and data_type != 'application/json+acdhlang':

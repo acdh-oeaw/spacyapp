@@ -14,8 +14,8 @@ class ConversionTestCase(TestCase):
         with open('jsonschema/acdh_json_example.json') as f:
             self.json_data = json.load(f)
 
-    def test_spacy_to_json(self):
-        d = Converter(data_type='spacyDoc', data=self.spacy_doc)
+#    def test_spacy_to_json(self):
+#       d = Converter(data_type='spacyDoc', data=self.spacy_doc)
 
     def test_spacy_to_json_new(self):
         d = SpacyProcess(payload=self.json_data, mime='application/json+acdhlang')
