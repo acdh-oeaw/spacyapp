@@ -34,9 +34,6 @@ class PipelineProcessBase:
     accepts = ["application/json+acdhlang"]
     returns = "application/json+acdhlang"
     payload = None
-    function = False
-    url = False
-    headers = False
     valid = False
     
     def convert_payload(self):
@@ -106,3 +103,12 @@ class SpacyProcess(PipelineProcessBase):
         super().__init__(**kwargs)
         if not self.valid:
             raise ValueError('Something went wrong in the data conversion. Data is not valid.')
+
+
+class XtxProcess(PipelineProcessBase):
+    accepts = ['application/xml+tei']
+    returns = 'application/xml+tei'
+
+    def __init__(self, options=None, pipeline=None, **kwargs):
+        self.pipeline = pipeline
+        self.options = options
