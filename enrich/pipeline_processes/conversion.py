@@ -5,15 +5,6 @@ from enrich.custom_parsers import process_tokenlist
 #from .base import check_validity_payload 
 
 
-MAPPING_CONVERTERS_BAK = {'from': {
-    'application/xml+tei': (TeiReader, 'create_tokenlist'),
-    'spacyDoc': (doc_to_tokenlist,),
-    'application/xml+tcf': (Tcf, 'create_tokenlist')
-},
-    'to': {
-        'application/xml+tei': (TeiReader, 'process_tokenlist')
-    }
-}
 
 MAPPING_CONVERTERS = {'from': {
     'application/xml+tei': (TeiReader, [('xml', 'original_xml')], 'create_tokenlist', [],),
@@ -50,7 +41,10 @@ class Converter:
         if len(to) > 2:
             attr_dict = {}
             for d in to[3]:
-                attr_dict[d[0]] = getattr(self.original_process, d[1])
+                if d[1].startswith('$'):
+                    attr_dict[d[0]] = getattr(self, d[1][1:])
+                else:
+                    attr_dict[d[0]] = getattr(self.original_process, d[1])
             data_converted = getattr(data_converted, to[2])(**attr_dict)
         return data_converted
 

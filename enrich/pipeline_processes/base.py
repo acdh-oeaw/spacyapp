@@ -5,7 +5,7 @@ import json
 import spacy
 from .conversion import Converter
 from enrich.custom_parsers import SPACY_LANG_LST, SPACY_PIPELINE
-
+import os
 
 
 def check_validity_payload(kind, payload):
@@ -19,6 +19,11 @@ def check_validity_payload(kind, payload):
                 return False
     elif kind == "spacyDoc":
         if type(payload) == spacy.tokens.doc.Doc:
+            return True
+        else:
+            return False
+    elif kind == "text/plain":
+        if type(payload) == str:
             return True
         else:
             return False
@@ -42,7 +47,7 @@ class PipelineProcessBase:
 
     def check_validity(self):
         """check_validity: checks if the payload is accepted by the function.
-           Starts vonvering process if needed.
+           Starts converting process if needed.
         """
         if self.mime is None:
             raise ValueError('You must specify a mime type of the payload.')
@@ -71,7 +76,12 @@ class SpacyProcess(PipelineProcessBase):
     returns = "spacyDoc"
 
     def process(self):
-       pass 
+        if self.mime == "text/plain":
+            self.payload = self.nlp(self.payload)
+        else:
+            for name, proc in self.nlp.pipeline:
+               self.payload = proc(self.payload)
+        return self.payload
 
     def __init__(self, options=None, pipeline=None, **kwargs):
         self.pipeline = pipeline
