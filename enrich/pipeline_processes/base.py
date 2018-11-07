@@ -3,9 +3,13 @@ from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 import json
 import spacy
+import requests
 from .conversion import Converter
 from enrich.custom_parsers import SPACY_LANG_LST, SPACY_PIPELINE
 import os
+from django.conf import settings
+from lxml import etree
+from io import StringIO, BytesIO
 
 
 def check_validity_payload(kind, payload):
@@ -27,6 +31,17 @@ def check_validity_payload(kind, payload):
             return True
         else:
             return False
+    elif kind == "application/xml+tei":
+        return True
+        with open('jsonschema/tei_all.xsd', 'rb') as schema_tei:
+            schema_tei = schema_tei.read()
+        xml_doc = etree.parse(BytesIO(payload))
+        schema_tei_doc = etree.parse(BytesIO(schema_tei))
+        schema_tei = etree.XMLSchema(schema_tei_doc)
+        if not schema_tei.assertValid(xml_doc):
+            return False
+        else:
+            return True
 
 
 class PipelineProcessBase:
@@ -38,7 +53,7 @@ class PipelineProcessBase:
     
     def convert_payload(self):
         self.payload = Converter(data_type=self.mime, data=self.payload, original_process=self).convert(to=self.accepts[0])
-        print('payload converted: {}'.format(self.payload))
+        #print('payload converted: {}'.format(self.payload))
         self.mime = self.accepts[0]
         self.check_validity()
 
@@ -64,7 +79,7 @@ class PipelineProcessBase:
         """
         self.payload = kwargs.get('payload', None)
         self.mime = kwargs.get('mime', None)
-        print('payload: {}'.format(self.payload))
+        #print('payload: {}'.format(self.payload))
         self.check_validity()
 
 
@@ -108,7 +123,22 @@ class SpacyProcess(PipelineProcessBase):
 class XtxProcess(PipelineProcessBase):
     accepts = ['application/xml+tei']
     returns = 'application/xml+tei'
+    
+    def process(self):
+        headers = {
+            'Content-type': 'application/xml;charset=UTF-8', 'accept': 'application/xml'
+        }
+        url = settings.XTX_URL
+        res = requests.post(url, headers=headers, data=self.payload.encode('utf-8'))
+        if res.status_code == 200:
+            self.payload = res.text
+        else:
+            raise ValueError('XTX did not respond with status code 200.')
+        return self.payload
 
     def __init__(self, options=None, pipeline=None, **kwargs):
         self.pipeline = pipeline
         self.options = options
+        super().__init__(**kwargs)
+        if not self.valid:
+            raise ValueError('Something went wrong in the data conversion. Data is not valid.')
