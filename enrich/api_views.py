@@ -46,9 +46,9 @@ def nerparser(request):
         longtext = request.GET.get('longtext')
         dont_split = request.GET.get('dont_split')
     if longtext:
-        doc = nlp("{}".format(longtext))
+        doc = nlp(u"{}".format(longtext))
         enriched = ner.fetch_ner_samples(doc, dont_split=dont_split)
-        return Response(enriched)
+        return Response(enriched, content_type="application/json; charset=utf-8")
     return Response(
         {
             "Param-Name": "longtext",
