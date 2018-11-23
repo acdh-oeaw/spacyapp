@@ -27,7 +27,10 @@ def process_tokenlist(nlp, tokenlist, enriched=False):
     :param enriched: if set to True spacy pipeline is run
     """
     json = {}
-    json['tokenArray'] = tokenlist
+    if 'tokenArray' in tokenlist.keys():
+        json['tokenArray'] = tokenlist['tokenArray']
+    else:
+        json['tokenArray'] = tokenlist
     ar_tok = [x['value'] for x in json['tokenArray']]
     ar_wsp = [x.get('whitespace', True) for x in json['tokenArray']]
     if Token.get_extension('tokenId') is None:
