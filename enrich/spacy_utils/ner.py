@@ -11,15 +11,22 @@ def format_iob_tag(token):
     return iob_tag
 
 
-def fetch_ner_samples(spacydoc):
+def fetch_ner_samples(spacydoc, dont_split=False):
     """ takes a doc object and genereates NER-Training samples """
     spacy_samples = []
-    sents = [x for x in spacydoc.sents]
-    doc = None
-    for sent in sents:
-        doc = nlp(sent.text)
-        spacy_sample = (sent.text, {'entities': []})
-        for ent in doc.ents:
+    if dont_split:
+        spacy_sample = (spacydoc.text, {'entities': []})
+        for ent in spacydoc.ents:
             spacy_sample[1]['entities'].append((ent.start_char, ent.end_char, ent.label_))
         spacy_samples.append(spacy_sample)
-    return spacy_samples
+        return spacy_samples
+    else:
+        sents = [x for x in spacydoc.sents]
+        doc = None
+        for sent in sents:
+            doc = nlp(sent.text)
+            spacy_sample = (sent.text, {'entities': []})
+            for ent in doc.ents:
+                spacy_sample[1]['entities'].append((ent.start_char, ent.end_char, ent.label_))
+            spacy_samples.append(spacy_sample)
+        return spacy_samples
