@@ -148,6 +148,50 @@ class JsonParser(APIView):
         return Response(doc)
 
 
+class NLPPipelineNew(APIView):
+
+    parser_classes = (MultiPartParser, )
+    file_types = ['application/xml+tei', 'application/json+acdhlang', 'application/xml+tcf', 'text/plain']
+    zip_types = ['zip']
+    
+    #def process_file(self, file):
+
+    def post(self, request, format=None):
+        data = request.data
+        tmp_dir = getattr(settings, "SPACYAPP_TEMP_DIR", 'tmp/')
+        self.pipeline = data.get('nlp_pipeline', None)
+        if self.pipeline is not None:
+            self.pipeline = ast.literal_eval(self.pipeline)
+        print(self.pipeline)
+        file_type = data.get('file_type', None)
+        self.file_type = file_type
+        zip_type = data.get('zip_type', None)
+        if zip_type is not None:
+            if zip_type not in self.zip_types:
+                raise ParseError(detail='zip type not supported')
+        if file_type.lower() not in self.file_types:
+            raise ParseError(detail='file type not supported')
+        f = data.get('file')
+        user = request.user.get_username()
+        if len(user) == 0 or user is None:
+            user = 'anonymous'
+        fn_orig = str(f)
+        ts = datetime.datetime.now().strftime('%Y-%m-%d_%H_%M_%S')
+        fn = '{}{}_{}'.format(tmp_dir, user, ts)
+        file = '{}.{}'.format(fn, fn_orig.split('.')[1])
+        with open(file, 'wb+') as destination:
+            for chunk in f.chunks():
+                destination.write(chunk)
+        if request.user.is_authenticated:
+            user2 = request.user.id
+        else:
+            user2 = None
+        proc_files = pipe_process_files.delay(
+            self.pipeline, file, fn, None, user, zip_type, self.file_type, user2)
+        resp = {'success': True, 'proc_id': proc_files.id}
+        return Response(resp)
+
+
 class NLPPipeline(APIView):
     """
     Endpoint that allows to define a pipeline that should be applied to a file.

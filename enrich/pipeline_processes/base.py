@@ -92,7 +92,7 @@ class SpacyProcess(PipelineProcessBase):
             self.payload = self.nlp(self.payload)
         else:
             for name, proc in self.nlp.pipeline:
-               self.payload = proc(self.payload)
+                self.payload = proc(self.payload)
         return self.payload
 
     def __init__(self, options=None, pipeline=None, **kwargs):
