@@ -131,3 +131,5 @@ MEDIA_URL = '/media/'
 XTX_URL = "https://xtx.acdh.oeaw.ac.at/exist/restxq/xtx/tokenize/default"
 TREETAGGER_URL = "https://linguistictagging.eos.arz.oeaw.ac.at"
 JSONPARSER_URL = "https://spacyapp.eos.arz.oeaw.ac.at/query/jsonparser-api/"
+
+SPACYAPP_TEMP_DIR = os.path.join(BASE_DIR, 'tmp')

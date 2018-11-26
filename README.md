@@ -17,3 +17,20 @@ Our service is currently under heavy development, but it provides so far:
 	- informs users logged in via email that their job is finished (processing a lot of TEI files can take a while)
 
 Have a look at https://spacyapp.acdh.oeaw.ac.at/ for a running version
+
+
+## install
+
+* clone the repo
+* set up a virtual environment (optional)
+* install required package (`pip install -r requirements.txt`)
+
+### customize settings
+
+**spacyapp** uses modularized settings. To start the developement server you'll need to add a settings parameter, e.g. `python manage.py runserver --settings=spacyapp.settings.dev`
+
+
+### start the app
+
+* start spacaypp `python manage.py runserver --settings=spacyapp.settings.dev`
+* start celery worker ``

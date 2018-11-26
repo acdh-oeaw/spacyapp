@@ -1,6 +1,6 @@
+import os
 import datetime
 import zipfile
-from os import makedirs, listdir
 import shutil
 import ast
 
@@ -221,7 +221,7 @@ class NLPPipeline(APIView):
 
     def post(self, request, format=None):
         data = request.data
-        tmp_dir = getattr(settings, "SPACYAPP_TEMP_DIR", 'tmp/')
+        tmp_dir = getattr(settings, "SPACYAPP_TEMP_DIR", 'tmp')
         self.pipeline = data.get('nlp_pipeline', None)
         if self.pipeline is not None:
             self.pipeline = ast.literal_eval(self.pipeline)
@@ -240,7 +240,8 @@ class NLPPipeline(APIView):
             user = 'anonymous'
         fn_orig = str(f)
         ts = datetime.datetime.now().strftime('%Y-%m-%d_%H_%M_%S')
-        fn = '{}{}_{}'.format(tmp_dir, user, ts)
+        fn = os.path.join(tmp_dir, "{}_{}".format(user, ts))
+        # fn = '{}{}_{}'.format(tmp_dir, user, ts)
         file = '{}.{}'.format(fn, fn_orig.split('.')[1])
         with open(file, 'wb+') as destination:
             for chunk in f.chunks():

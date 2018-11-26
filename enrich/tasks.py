@@ -16,6 +16,8 @@ from .tei import TeiReader
 
 @shared_task(time_limit=1000)
 def process_file(file, pipeline, file_type, fld_out):
+    print('######################')
+    print('fld_out: {}, file: {}'.format(fld_out, file))
     if file_type.lower() == 'tei' and pipeline[0][0].lower() == 'acdh-tokenizer':
         profile = pipeline[0][1].get('profile', 'default')
         with open(file, 'r', encoding='utf-8') as file_str:
@@ -87,13 +89,14 @@ def process_file(file, pipeline, file_type, fld_out):
             res2 = [item for sublist in res1 for item in sublist]
     if file_type == 'tei':
         res = res_tei.process_tokenlist(res2)
-        with open(path.join(fld_out, file.split('/')[-1]), 'wb') as outfile:
+        filename[1] = os.path.split(file)
+        with open(path.join(fld_out, filename), 'wb') as outfile:
             outfile.write(et.tostring(res, encoding='utf8', pretty_print=True))
         return {
             'success': True,
             'path': path.join(
                 fld_out,
-                file.split('/', )[-1],
+                filename[1],
             )
         }
 
@@ -125,11 +128,11 @@ def pipe_zip_files(
         if user_1.email is None:
             user_1 = False
     if user_1:
-        message = """Your job has finished. 
-        Please download the file under: 
+        message = """Your job has finished.
+        Please download the file under:
             https://spacyapp.eos.arz.oeaw.ac.at/{}""".format(path_2)
         html_message = """<p>Your job has finished.<br/>
-        <b>Please download the file under:</b> 
+        <b>Please download the file under:</b>
             <a href="https://spacyapp.eos.arz.oeaw.ac.at/{0}">{0}</a></p>""".format(path_2)
         send_mail(
             'spacyTEI job finished',
