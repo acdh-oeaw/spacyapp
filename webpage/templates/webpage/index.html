@@ -2,27 +2,15 @@
 {% load staticfiles %}
 {% load webpage_extras %}
 {% block content %}
-    <div class="container text-center">
-        <div id="myCarousel" class="carousel slide" data-ride="carousel">
-            <ol class="carousel-indicators">
-                <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
-                <li data-target="#myCarousel" data-slide-to="1"></li>
-            </ol>
-            <div class="carousel-inner" role="listbox">
-                <div class="item active">
-                    <img src="{% static 'webpage/img/acdh_django_base_project_orange.png' %}" alt="First" width="1200" height="600" title="by Sandra Lehecka" />
-                    <div class="carousel-caption"></div>
-                </div>
-                <div class="item">
-                    <img src="{% static 'webpage/img/ACDH_Panorama_Postkarte_motiv02.jpg' %}" alt="a nice feature picture" width="1200" height="600" title="by Sandra Lehecka" />
-                    <div class="carousel-caption"></div>
-                </div>
+
+        <div class="jumbotron" style="background-image: url({% static 'webpage/img/project_background.jpg' %}) ">
+            <div class="container">
+                <h1 style="text-align:center; color: #111;">{% projects_metadata 'title' %}</h1>
+                <h3 style="text-align:center; color: #111;">{% projects_metadata 'subtitle' %}</h3>
+                <h5 style="text-align:center; color: #111;">{% projects_metadata 'description' %}</h3>
             </div>
-            <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev"></a>
-            <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next"></a>
         </div>
-        <h1 style="text-align:center">{% projects_metadata 'title' %}</h1>
-        <h3>{% projects_metadata 'subtitle' %}</h3>
-        <p>{% projects_metadata 'description' %}</p>
+
+    <div class="container">
     </div>
 {% endblock %}

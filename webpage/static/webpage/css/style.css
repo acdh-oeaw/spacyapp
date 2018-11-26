@@ -1,120 +1,14 @@
-html {
-    height: 100%;
+.card {
+    overflow: visible;
+    margin-bottom: 20px;
 }
 
-body {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    font-family: 'Libre Franklin', sans-serif;
-    padding-top: 70px;
+a {
+    color: #88dbdf;
 }
-
-/*remove round corners everywhere*/
-/** {
-  border-radius: 0 !important;
-}*/
-
-header {
-    flex: 0 0 auto;
+.help-block {
+	font-size: 0.9em;
 }
-
-.main-content{
-    flex: 1 0 auto;
-}
-
-footer {
-    flex: 0 0 auto;
-    background-color: #f8f8f8;
-    padding: 20px;
-    left: 0;
-    right: 0;
-    width: 100%;
-    margin-top: 30px;
-}
-
-div.sentence {
-    line-height: 2em;
-}
-
-[data-ner] {
-    line-height: 1.5em;
-    display: inline-block;
-    padding: 0 0.15em 0.15em 2.5em;
-    position: relative;
-    cursor: help;
-    white-space: pre;
-}
-
-[data-ner]:after {
-    box-sizing: border-box;
-    content: '*' attr(data-ner);
-    line-height: 1;
-    display: inline-block;
-    font-size: 0.65em;
-    font-weight: bold;
-    text-transform: uppercase;
-    position: absolute;
-    /*left: 2em;*/
-    left: 0.5em;
-    top: 0.75em;
-    -webkit-transition: opacity 0.25s ease;
-    transition: opacity 0.25s ease;
-}
-
-[data-ner][data-ner="LOC"] {
-  background-color: rgba(41, 122, 196, 0.80);
-}
-
-[data-ner][data-ner="PER"] {
-  background-color: rgba(166, 54, 35, 0.8);
-}
-
-[data-ner][data-ner="ORG"] {
-  background-color: rgba(14, 185, 36, 0.8);
-}
-
-[data-ner][data-ner="MISC"] {
-  background-color: rgba(207, 198, 74, 0.8);
-}
-
-/*custom acdh logo css*/
-
-#acdh-logo {
-    width: 25%;
-    height: auto;
-    padding: 10px 0 10px 0;
-}
-
-#github-logo {
-    width: 10%;
-    height: auto;
-    padding: 10px 0 10px 0;
-}
-
-
-@media (max-width: 768px) {
-    #acdh-logo, #orea-logo {
-        width: 15%;
-    }
-    #github-logo {
-        width: 7%;
-    }
-}
-
-@media (min-width: 768px) and (max-width: 1105px) {
-    .navbar-right {
-        float: none !important;
-    }
-}
-
-/*Button's text is all in caps and bold. When adding html markup text should be all in lowercase. */
-.btn {
-    font-weight: bold;
-    font-variant: small-caps;
-    white-space: normal;
-}
-
-.btn-default {
-    margin-bottom: 10px;
+.create-label {
+	font-weight: 700;
 }
