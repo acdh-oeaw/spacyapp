@@ -41,16 +41,20 @@ def nerparser(request):
 
     if request.method == 'POST':
         longtext = request.data.get('longtext')
+        dont_split = request.data.get('dont_split')
     else:
         longtext = request.GET.get('longtext')
+        dont_split = request.GET.get('dont_split')
     if longtext:
-        doc = nlp("{}".format(longtext))
-        enriched = ner.fetch_ner_samples(doc)
-        return Response(enriched)
+        doc = nlp(u"{}".format(longtext))
+        enriched = ner.fetch_ner_samples(doc, dont_split=dont_split)
+        return Response(enriched, content_type="application/json; charset=utf-8")
     return Response(
         {
             "Param-Name": "longtext",
             "Param-Value": "any text you want",
+            "Param-Name": "dont_split",
+            "Param-Value": "True",
             "POST": "json"
         }
     )

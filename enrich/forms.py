@@ -60,6 +60,7 @@ class TokenForm(forms.Form):
 
 class LongTextForm(forms.Form):
     longtext = forms.CharField(required=False, widget=forms.Textarea)
+    # dont_split = forms.BooleanField(required=False)
 
     def __init__(self, *args, **kwargs):
         super(LongTextForm, self).__init__(*args, **kwargs)
