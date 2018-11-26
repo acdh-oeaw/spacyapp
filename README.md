@@ -29,8 +29,14 @@ Have a look at https://spacyapp.acdh.oeaw.ac.at/ for a running version
 
 **spacyapp** uses modularized settings. To start the developement server you'll need to add a settings parameter, e.g. `python manage.py runserver --settings=spacyapp.settings.dev`
 
+### celery settings
+
+Settings for celery are stored in `celery_settings.py`. Celery depends on django-settings. You can either provide them as environement variables
+* TODO Add example
+* or adapt in `celery_settings.py` the line `os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'spacyapp.settings.dev_custom')`
 
 ### start the app
 
 * start spacaypp `python manage.py runserver --settings=spacyapp.settings.dev`
-* start celery worker ``
+* start celery worker `celery -A celery_settings worker --loglevel=info`
+  * on Windows you'll need to add  `--pool=solo`
