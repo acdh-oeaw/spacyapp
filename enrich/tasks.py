@@ -1,6 +1,7 @@
 import datetime
 import shutil
 import zipfile
+import os
 from os import listdir, makedirs, path
 
 import lxml.etree as et
@@ -89,14 +90,14 @@ def process_file(file, pipeline, file_type, fld_out):
             res2 = [item for sublist in res1 for item in sublist]
     if file_type == 'tei':
         res = res_tei.process_tokenlist(res2)
-        filename[1] = os.path.split(file)
+        filename = os.path.split(file)[1]
         with open(path.join(fld_out, filename), 'wb') as outfile:
             outfile.write(et.tostring(res, encoding='utf8', pretty_print=True))
         return {
             'success': True,
             'path': path.join(
                 fld_out,
-                filename[1],
+                filename,
             )
         }
 
@@ -119,9 +120,9 @@ def pipe_zip_files(
     zipf.close()
     shutil.copy('{}_output.zip'.format(fn, ), '{}{}_output.zip'.format(
         dwld_dir,
-        fn.split('/', )[1],
+        os.path.split(fn)[1],
     ))
-    path_2 = '{}{}_output.zip'.format(dwld_dir, fn.split('/', )[1])
+    path_2 = '{}{}_output.zip'.format(dwld_dir, os.path.split(fn)[1])
     user_1 = False
     if user_id is not None:
         user_1 = User.objects.get(id=int(user_id))
@@ -169,6 +170,6 @@ def pipe_process_files(pipeline, file, fn, options, user, zip_type, file_type, u
             'id_docs': res_group.id,
             'path': '{}{}_output.zip'.format(
                 dwld_dir,
-                fn.split('/', )[1],
+                os.path.split(fn)[1],
             )
         }
