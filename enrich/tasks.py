@@ -13,6 +13,14 @@ from django.contrib.auth.models import User
 
 from .custom_parsers import JsonToDocParser, process_tokenlist
 from spacytei.tei import TeiReader
+from enrich.pipeline_processes.base import SpacyProcess, XtxProcess
+
+
+PROCESS_MAPPING = {
+    'acdh-tokenizer': XtxProcess,
+    'spacy': SpacyProcess,
+}
+
 
 
 @shared_task(time_limit=1000)
@@ -149,6 +157,23 @@ def pipe_zip_files(
     }
 
 
+@shared_task(time_limit=6000)
+def process_file_new(file, pipeline, file_type, fld_out):
+    res = file
+    for p in pipeline:
+        res = PROCESS_MAPPING[p[0]](mime=file_type, payload=res).process()
+    
+    with open(path.join(fld_out, file.split('/')[-1]), 'wb') as outfile:
+        outfile.write(res)
+    return {
+        'success': True,
+        'path': path.join(
+            fld_out,
+            file.split('/', )[-1],
+        )
+    }
+
+
 @shared_task(time_limit=1800)
 def pipe_process_files(pipeline, file, fn, options, user, zip_type, file_type, user_id=None):
     dwld_dir = getattr(settings, "SPACYAPP_DOWNLOAD_DIR", 'download/')
@@ -162,7 +187,7 @@ def pipe_process_files(pipeline, file, fn, options, user, zip_type, file_type, u
         zip_ref.close()
         lst_dir = listdir(fld_proc)
         res_group = chord(
-            process_file.s(
+            process_file_new.s(
                 path.join(fld_proc, fn), pipeline, file_type, fld_out)
             for fn in lst_dir)(pipe_zip_files.s(fld_out, dwld_dir, fn, user_id))
         return {

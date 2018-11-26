@@ -3,8 +3,9 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 
 FILE_CHOICES = (
-    ('tei', 'tei'),
-    ('tcf', 'tcf'),
+    ('application/xml+tei', 'tei'),
+    ('application/xml+tcf', 'tcf'),
+    ('text/plain', 'plain text')
 )
 
 ZIP_CHOICES = (
