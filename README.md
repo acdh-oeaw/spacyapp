@@ -40,3 +40,23 @@ Settings for celery are stored in `celery_settings.py`. Celery depends on django
 * start spacaypp `python manage.py runserver --settings=spacyapp.settings.dev`
 * start celery worker `celery -A celery_settings worker --loglevel=info`
   * on Windows you'll need to add  `--pool=solo`
+
+
+## Spacy Active learning (spacyal)
+
+[spacyal](https://zenodo.org/badge/latestdoi/130271493) is a python package for training your own spacy language models using active learning. To plug spacyal to spacyapp you'll need to
+* install the package `pip install spacyall`
+* add spacyall to your project's `INSTALLED_APPS` e.g. in `spacyapp/settings/base.py`
+* add `spacyal.urls` and `pacyal.api_urls` to your project's main URL definition `spacyapp/urls.py`, something like
+
+```
+urlpatterns = [
+    ...
+    path('spacyal_api/', include('spacyal.api_urls')),
+    path('spacyal/', include('spacyal.urls'))),
+    ...
+]
+```
+* run `python manage.py migrate --settings=spacaypp.settings.your_custom_settings`
+
+For further information about spacyal please refer to [spacyal](https://zenodo.org/badge/latestdoi/130271493)
