@@ -71,7 +71,7 @@ class PipelineProcessBase:
             self.convert_payload()
         self.valid = True
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """__init__
 
         :param payload: data for the process
@@ -79,6 +79,11 @@ class PipelineProcessBase:
         """
         self.payload = kwargs.get('payload', None)
         self.mime = kwargs.get('mime', None)
+        self.context = kwargs.get('context', None)
+        if self.context is None:
+            self.context = {}
+        #print(kwargs)
+        print(self.mime)
         #print('payload: {}'.format(self.payload))
         self.check_validity()
 
@@ -132,6 +137,7 @@ class XtxProcess(PipelineProcessBase):
         res = requests.post(url, headers=headers, data=self.payload.encode('utf-8'))
         if res.status_code == 200:
             self.payload = res.text
+            self.context['original_xml'] = self.payload
         else:
             raise ValueError('XTX did not respond with status code 200.')
         return self.payload
