@@ -3,6 +3,7 @@ import zipfile
 from os import makedirs, listdir
 import shutil
 import ast
+import json
 
 import spacy
 from django.conf import settings
@@ -164,9 +165,10 @@ class NLPPipelineNew(APIView):
         data = request.data
         tmp_dir = getattr(settings, "SPACYAPP_TEMP_DIR", 'tmp/')
         self.pipeline = data.get('nlp_pipeline', None)
+        self.out_format = data.get('out_format', "application/json+acdhlang")
         if self.pipeline is not None:
             self.pipeline = ast.literal_eval(self.pipeline)
-        print(self.pipeline)
+        #print(self.pipeline)
         file_type = data.get('file_type', None)
         self.file_type = file_type
         zip_type = data.get('zip_type', None)
@@ -191,7 +193,7 @@ class NLPPipelineNew(APIView):
         else:
             user2 = None
         proc_files = pipe_process_files.delay(
-            self.pipeline, file, fn, None, user, zip_type, self.file_type, user2)
+            self.pipeline, file, fn, None, user, zip_type, self.file_type, user2, self.out_format)
         resp = {'success': True, 'proc_id': proc_files.id}
         return Response(resp)
 
@@ -235,7 +237,7 @@ class NLPPipeline(APIView):
                        "outputproperties": {"lemma": True, "no-unknown": False}}
             res = requests.post(url, headers=headers, json=payload)
             if res.status_code != 200:
-                print(res.text)
+                #print(res.text)
                 res = res.text
             else:
                 res = res.json()['tokenArray']
@@ -344,6 +346,30 @@ class TestAgreement(APIView):
                 ParseError("You need to provide exactly two docs")
         else:
             ParseError("You need to provide two text docs")
+
+
+class GetDownloadLink(APIView):
+
+    def get(self, request):
+        proc_id = request.query_params.get('proc_id', None)
+        tt = TaskResult.objects.get(task_id=proc_id)
+        res = dict()
+        t = False
+        if tt.status == 'SUCCESS':
+            try:
+                t = TaskResult.objects.get(task_id=json.loads(tt.result)['id_docs'])
+            except TaskResult.DoesNotExist:
+                t = False
+        if t:
+            if t.status == 'SUCCESS':
+                p = json.loads(t.result)['path']
+                res['finished'] = True
+                res['path'] = p
+            else:
+                res['finished'] = False
+        else:
+            res['finished'] = False
+        return Response(res)
 
 
 @api_view()

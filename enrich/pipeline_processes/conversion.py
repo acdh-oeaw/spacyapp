@@ -7,13 +7,14 @@ from enrich.custom_parsers import process_tokenlist
 
 
 MAPPING_CONVERTERS = {'from': {
-    'application/xml+tei': (TeiReader, [('xml', 'original_xml')], 'create_tokenlist', [],),
+    'application/xml+tei': (TeiReader, [('xml', 'context.original_xml')], 'create_tokenlist', [],),
     'spacyDoc': (doc_to_tokenlist, [('doc', 'payload')]),
-    'application/xml+tcf': (Tcf, [('xml', 'original_xml')], 'create_tokenlist', [],)
+    'application/xml+tcf': (Tcf, [('xml', 'context.original_xml')], 'create_tokenlist', [],)
 },
     'to': {
-        'application/xml+tei': (TeiReader, 'process_tokenlist'),
-        'spacyDoc': (process_tokenlist, [('nlp', 'nlp'), ('tokenlist', '$data_json')])
+        'application/xml+tei': (TeiReader, [('xml', 'context.original_xml')], 'process_tokenlist', [('tokenlist', '$data_json',),]),
+        'spacyDoc': (process_tokenlist, [('nlp', 'nlp'), ('tokenlist', '$data_json')]),
+        'application/json+acdhlang': (doc_to_tokenlist, [('doc', 'payload')]),
     }
 }
 
@@ -35,8 +36,23 @@ class Converter:
             if d[1].startswith('$'):
                 attr_dict[d[0]] = getattr(self, d[1][1:])
             else:
-                attr_dict[d[0]] = getattr(self.original_process, d[1])
-        print(attr_dict)
+                lst_dict = d[1].split('.')
+                attr_1 = lst_dict.pop(0)
+                res_3 = getattr(self.original_process, attr_1)
+                for att_2 in lst_dict:
+                    res_3 = res_3[att_2]
+                attr_dict[d[0]] = res_3
+                print(attr_dict)
+                #check_1 = getattr(self.original_process, 'context', None)
+                #if check_1 is None:
+                #    print('check worked correct')
+                #    attr_dict[d[0]] = getattr(self.original_process, d[1])
+                #else:
+                #    print(d[1])
+                #    if d[1] not in check_1.keys():
+                #        attr_dict[d[0]] = getattr(self.original_process, d[1])
+                #    else:
+                #        attr_dict[d[0]] = check_1[d[1]]
         data_converted = to[0](**attr_dict)
         if len(to) > 2:
             attr_dict = {}
@@ -44,6 +60,7 @@ class Converter:
                 if d[1].startswith('$'):
                     attr_dict[d[0]] = getattr(self, d[1][1:])
                 else:
+                    print(d[1])
                     attr_dict[d[0]] = getattr(self.original_process, d[1])
             data_converted = getattr(data_converted, to[2])(**attr_dict)
         return data_converted
@@ -56,7 +73,7 @@ class Converter:
         if data_type not in MAPPING_CONVERTERS['from'].keys() and data_type != 'application/json+acdhlang':
             raise ValueError('Data type specified is not supported by the converter.')
         if original_process is None:
-            raise ValueError('Original process must be specified to get original files.')
+            raise ValueError('Original process must be specified to get original files.') 
         else:
             self.original_process = original_process
         if data_type == 'application/json+acdhlang':
