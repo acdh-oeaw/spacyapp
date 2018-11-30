@@ -42,6 +42,8 @@ def check_validity_payload(kind, payload):
             return False
         else:
             return True
+    elif kind == "application/xml+tcf":
+        return True
 
 
 class PipelineProcessBase:
