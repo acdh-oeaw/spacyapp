@@ -33,6 +33,7 @@ class XMLReader():
         except:
             self.parsed_file = "parsing didn't work"
 
+
     def tree_to_file(self, file=None):
         """saves current tree to file"""
         import lxml.etree as ET
@@ -55,6 +56,7 @@ class TeiReader(XMLReader):
 
         """ returns a list of token-dicts extracted from tei:w, tei:pc and tei:seg """
 
+        print(type(self.tree))
         doc = self.tree
         expr = "//tei:*[local-name() = $name or local-name() = $pc]"
         words = doc.xpath(expr, name="w", pc="pc", namespaces=self.ns_tei)
@@ -78,23 +80,24 @@ class TeiReader(XMLReader):
         """ takes a tokenlist and updated the tei:w tags. Returns the updated self.tree """
 
         expr = './/tei:w[@xml:id=$xmlid]'
-        for x in tokenlist:
-            try:
-                node = self.tree.xpath(expr, xmlid=x['tokenId'], namespaces=self.nsmap)[0]
-            except IndexError:
-                node = None
-            if node is not None:
+        for xs in tokenlist:
+            for x in xs['tokens']:
+                print(x['tokenId'])
                 try:
-                    node.attrib['lemma'] = x['lemma']
-                except AttributeError:
-                    pass
-                try:
-                    node.attrib['type'] = x['type']
-                except AttributeError:
-                    pass
-                try:
-                    node.attrib['ana'] = x['pos']
-                except AttributeError:
-                    pass
-
+                    node = self.tree.xpath(expr, xmlid=x['tokenId'], namespaces=self.nsmap)[0]
+                except IndexError:
+                    node = None
+                if node is not None:
+                    try:
+                        node.attrib['lemma'] = x['lemma']
+                    except AttributeError:
+                        pass
+                    try:
+                        node.attrib['type'] = x['type']
+                    except AttributeError:
+                        pass
+                    try:
+                        node.attrib['ana'] = x['pos']
+                    except AttributeError:
+                        pass
         return self.tree

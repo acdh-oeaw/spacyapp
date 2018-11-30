@@ -2,6 +2,8 @@ import datetime
 import shutil
 import zipfile
 from os import listdir, makedirs, path
+import json
+from lxml import etree
 
 import lxml.etree as et
 import requests
@@ -13,6 +15,7 @@ from django.contrib.auth.models import User
 from .custom_parsers import JsonToDocParser, process_tokenlist
 from .tei import TeiReader
 from enrich.pipeline_processes.base import SpacyProcess, XtxProcess
+from enrich.pipeline_processes.conversion import Converter
 
 
 PROCESS_MAPPING = {
@@ -154,25 +157,42 @@ def pipe_zip_files(
 
 
 @shared_task(time_limit=6000)
-def process_file_new(file, pipeline, file_type, fld_out):
-    res = file
-    for p in pipeline:
-        res = PROCESS_MAPPING[p[0]](mime=file_type, payload=res).process()
-    
-    with open(path.join(fld_out, file.split('/')[-1]), 'wb') as outfile:
-        outfile.write(res)
-    return {
-        'success': True,
-        'path': path.join(
-            fld_out,
-            file.split('/', )[-1],
-        )
-    }
+def process_file_new(file, pipeline, file_type, fld_out, out_format="application/json+acdhlang"):
+    with open(file, 'r') as res:
+        res = res.read()
+        out_format_file = None
+        orig_process = None
+        context = None
+        for p in pipeline:
+            proc = PROCESS_MAPPING[p[0]](mime=file_type, payload=res, context=context)
+            context = proc.context
+            res = proc.process()
+            out_format_file = proc.returns
+#            if orig_process is None:
+            orig_process = proc
+        if out_format != out_format_file:
+           res = Converter(data=res, data_type=out_format_file, original_process=orig_process).convert(out_format) 
+        with open(path.join(fld_out, file.split('/')[-1]), 'w') as outfile:
+            if type(res) == str:
+                outfile.write(res)
+            elif type(res) == list:
+                json.dump(res, outfile)
+            else:
+                outfile.write(etree.tostring(res, pretty_print=True, encoding='unicode')) # TODO: need a better check for lxml etree here
+
+        return {
+            'success': True,
+            'path': path.join(
+                fld_out,
+                file.split('/', )[-1],
+            )
+        }
 
 
 @shared_task(time_limit=1800)
-def pipe_process_files(pipeline, file, fn, options, user, zip_type, file_type, user_id=None):
+def pipe_process_files(pipeline, file, fn, options, user, zip_type, file_type, user_id=None, out_format="application/json+acdhlang"):
     dwld_dir = getattr(settings, "SPACYAPP_DOWNLOAD_DIR", 'download/')
+    #print(file_type)
     if zip_type is not None:
         makedirs('{}_folder'.format(fn))
         makedirs('{}_output'.format(fn))
@@ -182,9 +202,10 @@ def pipe_process_files(pipeline, file, fn, options, user, zip_type, file_type, u
         zip_ref.extractall(fld_proc)
         zip_ref.close()
         lst_dir = listdir(fld_proc)
+        #print(lst_dir)
         res_group = chord(
             process_file_new.s(
-                path.join(fld_proc, fn), pipeline, file_type, fld_out)
+                path.join(fld_proc, fn), pipeline, file_type, fld_out, out_format)
             for fn in lst_dir)(pipe_zip_files.s(fld_out, dwld_dir, fn, user_id))
         return {
             'success': True,

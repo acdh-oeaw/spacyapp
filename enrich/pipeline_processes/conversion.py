@@ -42,7 +42,6 @@ class Converter:
                 for att_2 in lst_dict:
                     res_3 = res_3[att_2]
                 attr_dict[d[0]] = res_3
-                print(attr_dict)
                 #check_1 = getattr(self.original_process, 'context', None)
                 #if check_1 is None:
                 #    print('check worked correct')
@@ -60,7 +59,6 @@ class Converter:
                 if d[1].startswith('$'):
                     attr_dict[d[0]] = getattr(self, d[1][1:])
                 else:
-                    print(d[1])
                     attr_dict[d[0]] = getattr(self.original_process, d[1])
             data_converted = getattr(data_converted, to[2])(**attr_dict)
         return data_converted
