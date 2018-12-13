@@ -16,14 +16,47 @@ import requests
 import lxml.etree as et
 
 from enrich.spacy_utils import ner
-from enrich.custom_parsers import JsonToDocParser
-from enrich.custom_renderers import DocToJsonRenderer
+from enrich.custom_parsers import JsonToDocParser, process_tokenlist
+from enrich.custom_renderers import DocToJsonRenderer, doc_to_tokenlist_no_sents
 from .tei import TeiReader
 from .tasks import pipe_process_files
 from django.conf import settings
 from django_celery_results.models import TaskResult
 
 nlp = spacy.load('de_core_news_sm')
+
+
+@api_view(['GET', 'POST'])
+@schema(None)
+def enrich_simple_jsonrequest(request):
+    """
+
+    post:
+    A JSON with following structure [
+        {
+            "tokenId": "id_1",
+            "whitespace": true,
+            "value": "Wir"
+        },
+    will be enriched.
+    """
+    if request.method == 'POST':
+        data = request.data
+        print(data)
+        enriched = process_tokenlist(nlp, data, enriched=True)
+        tokenlist = doc_to_tokenlist_no_sents(enriched)
+        print(tokenlist)
+        return Response(tokenlist, content_type="application/json; charset=utf-8")
+    else:
+        return Response(
+            {
+                "Param-Name": "longtext",
+                "Param-Value": "any text you want",
+                "Param-Name": "dont_split",
+                "Param-Value": "True",
+                "POST": "json"
+            }
+        )
 
 
 @api_view(['GET', 'POST'])

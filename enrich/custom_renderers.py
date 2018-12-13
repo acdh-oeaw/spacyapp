@@ -2,6 +2,25 @@ from rest_framework import renderers
 from enrich.spacy_utils.ner import format_iob_tag
 
 
+def doc_to_tokenlist_no_sents(doc):
+    result = []
+    for x in doc:
+        token = {}
+        token['tokenId'] = x._.tokenId
+        token['value'] = x.text
+        token['lemma'] = x.lemma_
+        token['pos'] = x.pos_
+        token['type'] = x.tag_
+        token['dep'] = x.dep_
+        token['shape'] = x.shape_
+        token['is_alpha'] = x.is_alpha
+        token['ent_iob'] = x.ent_iob_
+        token['iob'] = format_iob_tag(x)
+        token['ent_type'] = x.ent_type_
+        result.append(token)
+    return result
+
+
 def doc_to_tokenlist(doc):
     sents = [x for x in doc.sents]
     result = []

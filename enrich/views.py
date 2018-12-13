@@ -4,7 +4,7 @@ from spacy import displacy
 from rest_framework.decorators import api_view
 from django.shortcuts import render
 from django.views.generic.edit import FormView
-from django.views.generic.base import TemplateView 
+from django.views.generic.base import TemplateView
 from .forms import TokenForm, LongTextForm, NLPPipeForm
 from django.shortcuts import render_to_response
 from django_celery_results.models import TaskResult
