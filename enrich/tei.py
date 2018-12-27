@@ -1,6 +1,7 @@
 import lxml.etree as ET
 import time
 import datetime
+import re
 
 ns_tei = {'tei': "http://www.tei-c.org/ns/1.0"}
 ns_xml = {'xml': "http://www.w3.org/XML/1998/namespace"}
@@ -50,6 +51,78 @@ class XMLReader():
 class TeiReader(XMLReader):
 
     """ a class to read an process tei-documents"""
+
+    def extract_ne_elements(self, ne_xpath='.//tei:body//tei:rs'):
+
+        """ extract elements tagged as named entities
+        :param ne_xpath: An XPath expression pointing to elements used to tagged NEs.
+        :return: A list of elements
+
+        """
+
+        ne_elements = self.tree.xpath(ne_xpath, namespaces=self.ns_tei)
+        return ne_elements
+
+    def extract_ne_dicts(self, ne_xpath='.//tei:body//tei:rs'):
+
+        """ extract strings tagged as named entities
+        :param ne_xpath: An XPath expression pointing to elements used to tagged NEs.
+        :return: A list of NE-dicts containing the 'text' and the 'ne_type'
+        """
+
+        ne_elements = self.extract_ne_elements(ne_xpath)
+        ne_dicts = [
+            {
+                'text': re.sub('\s+', ' ', x.text).strip(),
+                'ne_type': x.xpath('./@type')
+            }
+            for x in ne_elements
+        ]
+        return ne_dicts
+
+    def create_plain_text(self, start_node='tei:body', ne_xpath='.//tei:body//tei:rs'):
+
+        """ extracts all text nodes from given element
+        :param start_node: An XPath expressione pointing to\
+        an element which text nodes should be extracted
+        :return: A normalized, cleaned plain text
+        """
+        try:
+            result = self.tree.xpath(start_node, namespaces=self.ns_tei)[0]
+        except IndexError:
+            print("start_node: {} couldn't be found".format(start_node))
+            result = []
+        if result is not None:
+            result = re.sub('\s+', ' ', "".join(result.xpath(".//text()"))).strip()
+
+        return result
+
+    def extract_ne_offsets(self, start_node='.//tei:body', ne_xpath='.//tei:body//tei:rs'):
+
+        """ extracts offsets of NEs and the NE-type
+        :param start_node: An XPath expressione pointing to\
+        an element which text nodes should be extracted
+        :param ne_xpath: An XPath expression pointing to elements used to tagged NEs.
+        :return: A list of spacy-like NER Tuples [('some text'), entities{[(15, 19, 'place')]}]
+        """
+
+        plain_text = self.create_plain_text(start_node)
+        ner_dicts = self.extract_ne_dicts(ne_xpath)
+
+        entities = []
+        for x in ner_dicts:
+            if x['text'] != "":
+                for m in re.finditer(x['text'], plain_text):
+                    entities.append([m.start(), m.end(), x['ne_type'][0]])
+        entities = [item for item in set(tuple(row) for row in entities)]
+        entities = sorted(entities, key=lambda x: x[0])
+        train_data = (
+            plain_text,
+            {
+                "entities": entities
+            }
+        )
+        return train_data
 
     def create_tokenlist(self):
 
