@@ -43,5 +43,9 @@ trained
 /data
 /media
 
+out.csv
+extract_ner_train_samples_from_tagged_tei.py
+/new_model
+
 
 Untitled1.ipynb

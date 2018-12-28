@@ -3,6 +3,17 @@ import time
 import datetime
 import re
 
+NER_TAG_MAP = {
+    "persName": "PER",
+    "person": "PER",
+    "placeName": "LOC",
+    "place": "LOC",
+    "orgName": "ORG",
+    "org": "ORG",
+    "work": "MISC",
+    "workName": "MISC"
+}
+
 ns_tei = {'tei': "http://www.tei-c.org/ns/1.0"}
 ns_xml = {'xml': "http://www.w3.org/XML/1998/namespace"}
 
@@ -71,13 +82,21 @@ class TeiReader(XMLReader):
         """
 
         ne_elements = self.extract_ne_elements(ne_xpath)
-        ne_dicts = [
-            {
-                'text': re.sub('\s+', ' ', x.text).strip(),
-                'ne_type': x.xpath('./@type')
-            }
-            for x in ne_elements
-        ]
+        ne_dicts = []
+        for x in ne_elements:
+            item = {}
+            item['text'] = re.sub('\s+', ' ', x.text).strip()
+            try:
+                ne_type = NER_TAG_MAP.get("{}".format(x.xpath('./@type')[0], 'MISC'))
+            except (IndexError, KeyError) as e:
+                ne_type = None
+            if ne_type is not None:
+                item['ne_type'] = ne_type
+            else:
+                ne_type = NER_TAG_MAP.get("{}".format(x.xpath("name()"), 'MISC'))
+                item['ne_type'] = ne_type
+            ne_dicts.append(item)
+
         return ne_dicts
 
     def create_plain_text(self, start_node='tei:body', ne_xpath='.//tei:body//tei:rs'):
@@ -108,21 +127,38 @@ class TeiReader(XMLReader):
 
         plain_text = self.create_plain_text(start_node)
         ner_dicts = self.extract_ne_dicts(ne_xpath)
+        if len(ner_dicts) == 0:
+            return None
+        else:
+            entities = []
+            for x in ner_dicts:
+                if x['text'] != "":
+                    for m in re.finditer(x['text'], plain_text):
+                        entities.append([m.start(), m.end(), x['ne_type']])
+            entities = [item for item in set(tuple(row) for row in entities)]
+            entities = sorted(entities, key=lambda x: x[0])
+            ents = []
+            next_item_index = 1
+            # remove entities with the same start offset
+            for x in entities:
+                cur_start = x[0]
+                try:
+                    next_start = entities[next_item_index][0]
+                except IndexError:
+                    next_start = 9999999999999999999999
+                if cur_start == next_start:
+                    pass
+                else:
+                    ents.append(x)
+                next_item_index = next_item_index + 1
 
-        entities = []
-        for x in ner_dicts:
-            if x['text'] != "":
-                for m in re.finditer(x['text'], plain_text):
-                    entities.append([m.start(), m.end(), x['ne_type'][0]])
-        entities = [item for item in set(tuple(row) for row in entities)]
-        entities = sorted(entities, key=lambda x: x[0])
-        train_data = (
-            plain_text,
-            {
-                "entities": entities
-            }
-        )
-        return train_data
+            train_data = (
+                plain_text,
+                {
+                    "entities": ents
+                }
+            )
+            return train_data
 
     def create_tokenlist(self):
 
@@ -171,3 +207,33 @@ class TeiReader(XMLReader):
                     pass
 
         return self.tree
+
+
+def teis_to_traindata(
+    files,
+    start_node='.//tei:body',
+    ne_xpath='.//tei:body//tei:rs',
+    verbose=True
+):
+
+    """ extract NER-Train-Data from bunch of TEI files
+        :param files: A list of file paths to TEI documents
+        :param start_node: An XPath expressione pointing to\
+        an element which text nodes should be extracted
+        :param ne_xpath: An XPath expression pointing to elements used to tagged NEs.
+        :return: A list of lists of spacy-like NER Tuple\
+        [(('some text'), entities{[(15, 19, 'place')]}), (...)]
+    """
+
+    TRAIN_DATA = []
+    for x in files:
+        try:
+            tei_doc = TeiReader(x)
+            ners = tei_doc.extract_ne_offsets(start_node, ne_xpath)
+            TRAIN_DATA.append(ners)
+        except Exception as e:
+            if verbose:
+                print(e)
+                print(x)
+
+    return TRAIN_DATA
