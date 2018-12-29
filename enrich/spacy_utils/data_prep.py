@@ -7,12 +7,13 @@ import pandas as pd
 import ast
 
 
-def clean_train_data(train_data, min_ents=3):
+def clean_train_data(train_data, min_ents=3, min_text_len=0):
 
     """ removes items with no entities or fewer entities then min_ents
         :param train_data: A list of lists of spacy-like NER Tuple\
         [(('some text'), entities{[(15, 19, 'place')]}), (...)]
         :param min_ents: An integer defining the minimum amount of entities.
+        :min_text_len: An integer defining the minimum length of the text.
         :return: A list of lists of spacy-like NER Tuple\
         [(('some text'), entities{[(15, 19, 'place')]}), (...)]
     """
@@ -23,7 +24,7 @@ def clean_train_data(train_data, min_ents=3):
             ents = x[1]
         except TypeError:
             ents = None
-        if ents and len(ents['entities']) > min_ents:
+        if ents and len(ents['entities']) >= min_ents and len(x[0]) >= min_text_len:
             TRAIN_DATA.append(x)
     return TRAIN_DATA
 
