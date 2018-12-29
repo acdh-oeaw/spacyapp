@@ -85,21 +85,18 @@ class TeiReader(XMLReader):
         ne_dicts = []
         for x in ne_elements:
             item = {}
-            item['text'] = re.sub('\s+', ' ', x.text).strip()
+            text = "".join(x.xpath('.//text()'))
+            item['text'] = re.sub('\s+', ' ', text).strip()
             try:
-                ne_type = NER_TAG_MAP.get("{}".format(x.xpath('./@type')[0], 'MISC'))
-            except (IndexError, KeyError) as e:
-                ne_type = None
-            if ne_type is not None:
-                item['ne_type'] = ne_type
-            else:
-                ne_type = NER_TAG_MAP.get("{}".format(x.xpath("name()"), 'MISC'))
-                item['ne_type'] = ne_type
+                ne_type = NER_TAG_MAP.get("{}".format(x.xpath('./@type')[0]), 'MISC')
+            except IndexError as e:
+                ne_type = NER_TAG_MAP.get("{}".format(x.xpath("name()")), 'MISC')
+            item['ne_type'] = ne_type
             ne_dicts.append(item)
 
         return ne_dicts
 
-    def create_plain_text(self, start_node='tei:body', ne_xpath='.//tei:body//tei:rs'):
+    def create_plain_text(self, start_node='.//tei:body'):
 
         """ extracts all text nodes from given element
         :param start_node: An XPath expressione pointing to\
