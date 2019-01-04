@@ -172,6 +172,57 @@ class TeiReader(XMLReader):
             result.append(train_data)
         return result
 
+    def ne_offsets_by_sent(
+        self, parent_nodes='.//tei:body//tei:p', ne_xpath='.//tei:rs', model='de_core_news_sm'
+    ):
+
+        """ extracts offsets of NEs and the NE-type grouped by sents
+        :param parent_nodes: An XPath expressione pointing to\
+        those element which text nodes should be extracted
+        :param ne_xpath: An XPath expression pointing to elements used to tagged NEs.\
+        Takes the parent node(s) as context
+        :param model: The name of the spacy model which should be used for sentence splitting.
+        :return: A list of spacy-like NER Tuples [('some text'), entities{[(15, 19, 'place')]}]
+        """
+        import spacy
+        nlp = spacy.load(model)
+        text_nes = self.get_text_nes_list(parent_nodes, ne_xpath)
+        results = []
+        for entry in text_nes:
+            ner_dicts = entry['ner_dicts']
+            in_text = entry['text']
+            doc = nlp(in_text)
+            for sent in doc.sents:
+                entities = []
+                if sent.text != "":
+                    plain_text = sent.text
+                    for x in ner_dicts:
+                        for m in re.finditer(x['text'], plain_text):
+                            entities.append([m.start(), m.end(), x['ne_type']])
+                    entities = [item for item in set(tuple(row) for row in entities)]
+                    entities = sorted(entities, key=lambda x: x[0])
+                    ents = []
+                    next_item_index = 1
+                    for x in entities:
+                        cur_start = x[0]
+                        try:
+                            next_start = entities[next_item_index][0]
+                        except IndexError:
+                            next_start = 9999999999999999999999
+                        if cur_start == next_start:
+                            pass
+                        else:
+                            ents.append(x)
+                        next_item_index = next_item_index + 1
+                train_data = (
+                    plain_text,
+                    {
+                        "entities": ents
+                    }
+                )
+                results.append(train_data)
+        return results
+
     def create_tokenlist(self):
 
         """ returns a list of token-dicts extracted from tei:w, tei:pc and tei:seg """
@@ -243,6 +294,39 @@ def teis_to_traindata(
         tei_doc = TeiReader(x)
         try:
             ners = tei_doc.extract_ne_offsets(parent_nodes=parent_node, ne_xpath=ne_xpath)
+        except Exception as e:
+            print("Error: {} in file: {}".format(e, x))
+        [TRAIN_DATA.append(x) for x in ners]
+
+    return TRAIN_DATA
+
+
+def teis_to_traindata_sents(
+    files,
+    parent_node='.//tei:body',
+    ne_xpath='.//tei:rs',
+    verbose=True,
+    model='de_core_news_sm'
+):
+
+    """ extract NER-Train-Data from bunch of TEI files
+        :param files: A list of file paths to TEI documents
+        :param parent_nodes: An XPath expressione pointing to\
+        those element which text nodes should be extracted
+        :param ne_xpath: An XPath expression pointing to elements used to tagged NEs.\
+        Takes the parent node(s) as context
+        :param model: The name of the spacy model which should be used for sentence splitting.
+        :return: A list of lists of spacy-like NER Tuples\
+        [(('some text'), entities{[(15, 19, 'place')]}), (...)]
+    """
+
+    TRAIN_DATA = []
+    for x in files:
+        tei_doc = TeiReader(x)
+        try:
+            ners = tei_doc.ne_offsets_by_sent(
+                parent_nodes=parent_node, ne_xpath=ne_xpath, model=model
+            )
         except Exception as e:
             print("Error: {} in file: {}".format(e, x))
         [TRAIN_DATA.append(x) for x in ners]
