@@ -224,7 +224,7 @@ class TeiReader(XMLReader):
 def teis_to_traindata(
     files,
     parent_node='.//tei:body',
-    ne_xpath='//tei:rs',
+    ne_xpath='.//tei:rs',
     verbose=True
 ):
 
@@ -242,7 +242,7 @@ def teis_to_traindata(
     for x in files:
         tei_doc = TeiReader(x)
         try:
-            ners = tei_doc.extract_ne_offsets(ne_xpath='.//tei:*[@key]')
+            ners = tei_doc.extract_ne_offsets(parent_nodes=parent_node, ne_xpath=ne_xpath)
         except Exception as e:
             print("Error: {} in file: {}".format(e, x))
         [TRAIN_DATA.append(x) for x in ners]
