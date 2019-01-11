@@ -27,11 +27,12 @@ Compatible with: spaCy v2.0.0+
 #     n_iter=("Number of training iterations", "option", "n", int),
 # )
 def main(
-    model="de_core_news_sm",
-    output_dir="data/thun_sents_all_1",
-    n_iter=5,
-    train_data="data/thun_sents_all.csv",
-    n_samples=35000
+    model=None,
+    output_dir="data/vfbr_newlabel_blank_250_100",
+    n_iter=100,
+    train_data="data/vfbr.csv",
+    n_samples=250,
+    new_label="OBJECT"
 ):
     """Load the model, set up the pipeline and train the entity recognizer."""
 
@@ -53,9 +54,15 @@ def main(
     else:
         ner = nlp.get_pipe("ner")
 
+    if new_label:
+        if model is None:
+            optimizer = nlp.begin_training()
+        else:
+            optimizer = nlp.entity.create_optimizer()
+        ner.add_label(new_label)
+
     TRAIN_DATA = csv_to_traindata(train_data)[:n_samples]
     # TRAIN_DATA = clean_train_data(TRAIN_DATA, min_ents=2, min_text_len=5)
-
     # add labels
     for _, annotations in TRAIN_DATA:
         for ent in annotations.get("entities"):
@@ -77,12 +84,27 @@ def main(
             batches = minibatch(TRAIN_DATA, size=compounding(4.0, 16.0, 1.001))
             for batch in batches:
                 texts, annotations = zip(*batch)
-                nlp.update(
-                    texts,  # batch of texts
-                    annotations,  # batch of annotations
-                    drop=0.5,  # dropout - make it harder to memorise data
-                    losses=losses,
-                )
+                if new_label:
+                    try:
+                        nlp.update(
+                            texts,
+                            annotations,
+                            sgd=optimizer,
+                            drop=0.35,
+                            losses=losses
+                        )
+                    except Exception as e:
+                        print(annotations)
+                else:
+                    try:
+                        nlp.update(
+                            texts,  # batch of texts
+                            annotations,  # batch of annotations
+                            drop=0.5,  # dropout - make it harder to memorise data
+                            losses=losses,
+                        )
+                    except Exception as e:
+                        print(annotations)
             print("Losses", losses)
             end_time = datetime.datetime.now()
             print("Duration: {}".format(end_time - start_time))
