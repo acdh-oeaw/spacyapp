@@ -22,16 +22,16 @@ Compatible with: spaCy v2.0.0+
 
 
 # @plac.annotations(
-#     model=("Model name. Defaults to blank 'en' model.", "option", "m", str),
+#     model=("Model name. Defaults to blank 'de_core_news_sm' model.", "option", "m", str),
 #     output_dir=("Optional output directory", "option", "o", Path),
 #     n_iter=("Number of training iterations", "option", "n", int),
 # )
 def main(
-    model=None,
-    output_dir="data/vfbr_newlabel_blank_250_100",
-    n_iter=100,
-    train_data="data/vfbr.csv",
-    n_samples=250,
+    model='de_core_news_sm',
+    output_dir="data/dipko_1500_50",
+    n_iter=50,
+    train_data="data/dipko_sents_all.csv",
+    n_samples=1500,
     new_label="OBJECT"
 ):
     """Load the model, set up the pipeline and train the entity recognizer."""

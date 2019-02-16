@@ -74,10 +74,12 @@ class TeiReader(XMLReader):
         ne_elements = parent_node.xpath(ne_xpath, namespaces=self.ns_tei)
         return ne_elements
 
-    def extract_ne_dicts(self, parent_node, ne_xpath='//tei:rs'):
+    def extract_ne_dicts(self, parent_node, ne_xpath='//tei:rs', NER_TAG_MAP=NER_TAG_MAP):
 
         """ extract strings tagged as named entities
         :param ne_xpath: An XPath expression pointing to elements used to tagged NEs.
+        :param NER_TAG_MAP: A dictionary providing mapping from TEI tags used to tag NEs to\
+        spacy-tags
         :return: A list of NE-dicts containing the 'text' and the 'ne_type'
         """
 
@@ -107,13 +109,20 @@ class TeiReader(XMLReader):
 
         return result
 
-    def get_text_nes_list(self, parent_nodes='.//tei:body//tei:p', ne_xpath='.//tei:rs'):
+    def get_text_nes_list(
+            self,
+            parent_nodes='.//tei:body//tei:p',
+            ne_xpath='.//tei:rs',
+            NER_TAG_MAP=NER_TAG_MAP
+    ):
 
         """ extracts all text nodes from given elements and their NE
         :param parent_nodes: An XPath expressione pointing to\
         those elements which text nodes should be extracted
         :param ne_xpath:  An XPath expression pointing to elements used to tagged NEs.\
         Takes the parent node(s) as context
+        :param NER_TAG_MAP: A dictionary providing mapping from TEI tags used to tag NEs to\
+        spacy-tags
         :return: A list of dicts like [{"text": "Wien ist schön", "ner_dicts": [{"text": "Wien",\
         "ne_type": "LOC"}]}]
         """
@@ -122,21 +131,28 @@ class TeiReader(XMLReader):
         result = []
         for node in parents:
             text = self.create_plain_text(node)
-            ner_dicts = self.extract_ne_dicts(node, ne_xpath)
+            ner_dicts = self.extract_ne_dicts(node, ne_xpath, NER_TAG_MAP)
             result.append({'text': text, 'ner_dicts': ner_dicts})
         return result
 
-    def extract_ne_offsets(self, parent_nodes='.//tei:body//tei:p', ne_xpath='.//tei:rs'):
+    def extract_ne_offsets(
+        self,
+        parent_nodes='.//tei:body//tei:p',
+        ne_xpath='.//tei:rs',
+        NER_TAG_MAP=NER_TAG_MAP
+    ):
 
         """ extracts offsets of NEs and the NE-type
         :param parent_nodes: An XPath expressione pointing to\
         those element which text nodes should be extracted
         :param ne_xpath: An XPath expression pointing to elements used to tagged NEs.\
         Takes the parent node(s) as context
+        :param NER_TAG_MAP: A dictionary providing mapping from TEI tags used to tag NEs to\
+        spacy-tags
         :return: A list of spacy-like NER Tuples [('some text'), entities{[(15, 19, 'place')]}]
         """
 
-        text_nes_dict = self.get_text_nes_list(parent_nodes, ne_xpath)
+        text_nes_dict = self.get_text_nes_list(parent_nodes, ne_xpath, NER_TAG_MAP)
         result = []
         for x in text_nes_dict:
             plain_text = x['text']
@@ -173,7 +189,11 @@ class TeiReader(XMLReader):
         return result
 
     def ne_offsets_by_sent(
-        self, parent_nodes='.//tei:body//tei:p', ne_xpath='.//tei:rs', model='de_core_news_sm'
+        self,
+        parent_nodes='.//tei:body//tei:p',
+        ne_xpath='.//tei:rs',
+        model='de_core_news_sm',
+        NER_TAG_MAP=NER_TAG_MAP
     ):
 
         """ extracts offsets of NEs and the NE-type grouped by sents
@@ -182,11 +202,13 @@ class TeiReader(XMLReader):
         :param ne_xpath: An XPath expression pointing to elements used to tagged NEs.\
         Takes the parent node(s) as context
         :param model: The name of the spacy model which should be used for sentence splitting.
+        :param NER_TAG_MAP: A dictionary providing mapping from TEI tags used to tag NEs to\
+        spacy-tags
         :return: A list of spacy-like NER Tuples [('some text'), entities{[(15, 19, 'place')]}]
         """
         import spacy
         nlp = spacy.load(model)
-        text_nes = self.get_text_nes_list(parent_nodes, ne_xpath)
+        text_nes = self.get_text_nes_list(parent_nodes, ne_xpath, NER_TAG_MAP)
         results = []
         for entry in text_nes:
             ner_dicts = entry['ner_dicts']
@@ -276,7 +298,8 @@ def teis_to_traindata(
     files,
     parent_node='.//tei:body',
     ne_xpath='.//tei:rs',
-    verbose=True
+    verbose=True,
+    NER_TAG_MAP=NER_TAG_MAP
 ):
 
     """ extract NER-Train-Data from bunch of TEI files
@@ -285,6 +308,8 @@ def teis_to_traindata(
         those element which text nodes should be extracted
         :param ne_xpath: An XPath expression pointing to elements used to tagged NEs.\
         Takes the parent node(s) as context
+        :param NER_TAG_MAP: A dictionary providing mapping from TEI tags used to tag NEs to\
+        spacy-tags
         :return: A list of lists of spacy-like NER Tuples\
         [(('some text'), entities{[(15, 19, 'place')]}), (...)]
     """
@@ -293,7 +318,9 @@ def teis_to_traindata(
     for x in files:
         tei_doc = TeiReader(x)
         try:
-            ners = tei_doc.extract_ne_offsets(parent_nodes=parent_node, ne_xpath=ne_xpath)
+            ners = tei_doc.extract_ne_offsets(
+                parent_nodes=parent_node, ne_xpath=ne_xpath, NER_TAG_MAP=NER_TAG_MAP
+            )
         except Exception as e:
             print("Error: {} in file: {}".format(e, x))
         [TRAIN_DATA.append(x) for x in ners]
@@ -306,7 +333,8 @@ def teis_to_traindata_sents(
     parent_node='.//tei:body',
     ne_xpath='.//tei:rs',
     verbose=True,
-    model='de_core_news_sm'
+    model='de_core_news_sm',
+    NER_TAG_MAP=NER_TAG_MAP
 ):
 
     """ extract NER-Train-Data from bunch of TEI files
@@ -316,6 +344,8 @@ def teis_to_traindata_sents(
         :param ne_xpath: An XPath expression pointing to elements used to tagged NEs.\
         Takes the parent node(s) as context
         :param model: The name of the spacy model which should be used for sentence splitting.
+        :param NER_TAG_MAP: A dictionary providing mapping from TEI tags used to tag NEs to\
+        spacy-tags
         :return: A list of lists of spacy-like NER Tuples\
         [(('some text'), entities{[(15, 19, 'place')]}), (...)]
     """
@@ -325,7 +355,7 @@ def teis_to_traindata_sents(
         tei_doc = TeiReader(x)
         try:
             ners = tei_doc.ne_offsets_by_sent(
-                parent_nodes=parent_node, ne_xpath=ne_xpath, model=model
+                parent_nodes=parent_node, ne_xpath=ne_xpath, model=model, NER_TAG_MAP=NER_TAG_MAP
             )
         except Exception as e:
             print("Error: {} in file: {}".format(e, x))
