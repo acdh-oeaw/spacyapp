@@ -33,9 +33,14 @@ def stream_docs_to_file(domain, app_name, spacy_model='de_core_news_sm', min_len
     endpoint = "{}/exist/restxq/{}/api/collections/editions".format(domain, app_name)
     r = requests.get(endpoint)
     if r.status_code == 200:
-        print('all good')
+        if verbose:
+            print('connection to {}:all good'.format(endpoint))
     else:
-        print("There is a problem, status code: {}".format(status_code))
+        print(
+            "There is a problem with connection to {}, status code: {}".format(
+                r.status_code, endpoint
+            )
+        )
         return None
     hits = r.json()['result']['meta']['hits']
     all_files = requests.get("{}?page[size]={}".format(endpoint, hits)).json()['data']
