@@ -15,10 +15,11 @@ from sklearn.metrics import cohen_kappa_score, precision_recall_fscore_support
 import requests
 import lxml.etree as et
 
-from enrich.spacy_utils import ner
+from spacytei import ner
+from spacytei.tei import TeiReader
 from enrich.custom_parsers import JsonToDocParser, process_tokenlist
 from enrich.custom_renderers import DocToJsonRenderer, doc_to_tokenlist_no_sents
-from .tei import TeiReader
+
 from .tasks import pipe_process_files
 from django.conf import settings
 from django_celery_results.models import TaskResult
@@ -80,7 +81,7 @@ def nerparser(request):
         dont_split = request.GET.get('dont_split')
     if longtext:
         doc = nlp(u"{}".format(longtext))
-        enriched = ner.fetch_ner_samples(doc, dont_split=dont_split)
+        enriched = ner.fetch_ner_samples(nlp, doc, dont_split=dont_split)
         return Response(enriched, content_type="application/json; charset=utf-8")
     return Response(
         {

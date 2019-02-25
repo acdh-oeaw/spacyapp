@@ -2,7 +2,7 @@
 This module provides some helper functions\
 to fetch data from an dsebaseapp instance to create word embeddings
 run something like:
-from enrich.spacy_utils.vecs import stream_docs_to_file, create_word_vecs
+from spacytei..vecs import stream_docs_to_file, create_word_vecs
 domain = "http://127.0.0.1:8080"
 app_name = "akademie"
 filename = stream_docs_to_file(domain, app_name, verbose=False)

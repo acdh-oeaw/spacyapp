@@ -1,5 +1,5 @@
 from rest_framework import renderers
-from enrich.spacy_utils.ner import format_iob_tag
+from spacytei.ner import format_iob_tag
 
 
 def doc_to_tokenlist_no_sents(doc):
