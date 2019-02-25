@@ -9,7 +9,7 @@ from .forms import TokenForm, LongTextForm, NLPPipeForm
 from django.shortcuts import render_to_response
 from django_celery_results.models import TaskResult
 
-nlp = spacy.load('de_core_news_sm')
+nlp = spacy.load(r"C:\Users\pandorfer\Documents\Redmine\prodigy\work\vfbr\vfbr-fam-model")
 
 
 class TextParser(FormView):

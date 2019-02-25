@@ -1,6 +1,6 @@
 import spacy
 
-nlp = spacy.load('de_core_news_sm')
+nlp = spacy.load(r"C:\Users\pandorfer\Documents\Redmine\prodigy\work\vfbr\vfbr-fam-model")
 
 
 def format_iob_tag(token):
@@ -11,13 +11,14 @@ def format_iob_tag(token):
     return iob_tag
 
 
-def fetch_ner_samples(spacydoc, dont_split=False):
+def fetch_ner_samples(spacydoc, dont_split=False, ent_types=['OBJECT']):
     """ takes a doc object and genereates NER-Training samples """
     spacy_samples = []
     if dont_split:
         spacy_sample = (spacydoc.text, {'entities': []})
         for ent in spacydoc.ents:
-            spacy_sample[1]['entities'].append((ent.start_char, ent.end_char, ent.label_))
+            if ent.label_ in ent_types:
+                spacy_sample[1]['entities'].append((ent.start_char, ent.end_char, ent.label_))
         spacy_samples.append(spacy_sample)
         return spacy_samples
     else:
@@ -27,6 +28,7 @@ def fetch_ner_samples(spacydoc, dont_split=False):
             doc = nlp(sent.text)
             spacy_sample = (sent.text, {'entities': []})
             for ent in doc.ents:
-                spacy_sample[1]['entities'].append((ent.start_char, ent.end_char, ent.label_))
+                if ent.label_ in ent_types:
+                    spacy_sample[1]['entities'].append((ent.start_char, ent.end_char, ent.label_))
             spacy_samples.append(spacy_sample)
         return spacy_samples

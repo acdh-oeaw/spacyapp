@@ -12,7 +12,7 @@ from django.core.mail import send_mail
 from django.contrib.auth.models import User
 
 from .custom_parsers import JsonToDocParser, process_tokenlist
-from .tei import TeiReader
+from spacytei.tei import TeiReader
 
 
 @shared_task(time_limit=1000)

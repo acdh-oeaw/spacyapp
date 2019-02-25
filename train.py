@@ -7,7 +7,7 @@ import random
 from pathlib import Path
 import spacy
 from spacy.util import minibatch, compounding
-from enrich.spacy_utils.data_prep import csv_to_traindata, clean_train_data
+from spacytei.data_prep import csv_to_traindata, clean_train_data
 
 
 """Example of training spaCy's named entity recognizer, starting off with an
@@ -27,12 +27,12 @@ Compatible with: spaCy v2.0.0+
 #     n_iter=("Number of training iterations", "option", "n", int),
 # )
 def main(
-    model='de_core_news_sm',
-    output_dir="data/dipko_1500_50",
-    n_iter=50,
-    train_data="data/dipko_sents_all.csv",
-    n_samples=1500,
-    new_label="OBJECT"
+    model=None,
+    output_dir="data/gesamtakademie_custom_v_5500_35",
+    n_iter=35,
+    train_data="data/gesamtakademie_p_sents_all.csv",
+    n_samples=5500,
+    new_label=None
 ):
     """Load the model, set up the pipeline and train the entity recognizer."""
 
@@ -42,7 +42,7 @@ def main(
         nlp = spacy.load(model)  # load existing spaCy model
         print("Loaded model '%s'" % model)
     else:
-        nlp = spacy.blank("de")  # create blank Language class
+        nlp = spacy.load(r'C:\Users\pandorfer\Documents\Redmine\prodigy\work\akademie\akademie_custom_vector')  # create blank Language class
         print("Created blank model")
 
     # create the built-in pipeline components and add them to the pipeline
