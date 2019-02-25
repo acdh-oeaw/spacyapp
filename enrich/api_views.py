@@ -23,7 +23,7 @@ from .tasks import pipe_process_files
 from django.conf import settings
 from django_celery_results.models import TaskResult
 
-nlp = spacy.load(r"C:\Users\pandorfer\Documents\Redmine\prodigy\work\vfbr\vfbr-fam-model")
+nlp = spacy.load('de_core_news_sm')
 
 
 @api_view(['GET', 'POST'])

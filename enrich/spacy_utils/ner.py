@@ -1,6 +1,6 @@
 import spacy
 
-nlp = spacy.load(r"C:\Users\pandorfer\Documents\Redmine\prodigy\work\vfbr\vfbr-fam-model")
+nlp = spacy.load('de_core_news_sm')
 
 
 def format_iob_tag(token):
