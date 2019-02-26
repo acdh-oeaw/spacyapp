@@ -1,4 +1,4 @@
-acdh-spacytei==0.0.3
+acdh-spacytei==0.0.4
 amqp==2.3.2
 billiard==3.5.0.4
 bleach==2.1.2
