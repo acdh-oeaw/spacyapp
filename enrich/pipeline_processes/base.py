@@ -7,7 +7,6 @@ import requests
 from .conversion import Converter
 from enrich.custom_parsers import SPACY_LANG_LST, SPACY_PIPELINE
 import os
-from django.conf import settings
 from lxml import etree
 from io import StringIO, BytesIO
 
@@ -135,7 +134,7 @@ class XtxProcess(PipelineProcessBase):
         headers = {
             'Content-type': 'application/xml;charset=UTF-8', 'accept': 'application/xml'
         }
-        url = settings.XTX_URL
+        url = self.XTX_URL
         res = requests.post(url, headers=headers, data=self.payload.encode('utf-8'))
         if res.status_code == 200:
             self.payload = res.text
@@ -147,6 +146,10 @@ class XtxProcess(PipelineProcessBase):
     def __init__(self, options=None, pipeline=None, **kwargs):
         self.pipeline = pipeline
         self.options = options
+        self.XTX_URL = kwargs.get('XTX_URL', None)
+        if self.XTX_URL is None:
+            from django.conf import settings
+            self.XTX_URL = settings.XTX_URL
         super().__init__(**kwargs)
         if not self.valid:
             raise ValueError('Something went wrong in the data conversion. Data is not valid.')
