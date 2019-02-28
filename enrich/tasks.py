@@ -15,8 +15,8 @@ from django.contrib.auth.models import User
 
 from .custom_parsers import JsonToDocParser, process_tokenlist
 from spacytei.tei import TeiReader
-from enrich.pipeline_processes.base import SpacyProcess, XtxProcess
-from enrich.pipeline_processes.conversion import Converter
+from spacytei.pipeline import SpacyProcess, XtxProcess
+from spacytei.conversion import Converter
 
 
 PROCESS_MAPPING = {
