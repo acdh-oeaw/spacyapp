@@ -3,18 +3,7 @@ import spacy
 from rest_framework.parsers import JSONParser
 from spacy.tokens import Doc, Token
 from spacytei.tokenlist import process_tokenlist
-
-SPACY_LANG_LST = {
-    "german": "de_core_news_sm",
-    "de": "de_core_news_sm",
-    "deutsch": "de_core_news_sm",
-    "ger": "de_core_news_sm",
-    "en": "en_core_web_sm",
-    "english": "en_core_web_sm",
-    "eng": "en_core_web_sm"
-}
-
-SPACY_PIPELINE = ['tagger', 'parser', 'ner']
+from enrich.default_settings import SPACY_LANG_LST, SPACY_PIPELINE
 
 
 class JsonToDocParser(JSONParser):

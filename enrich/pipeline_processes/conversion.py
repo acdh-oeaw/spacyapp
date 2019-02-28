@@ -1,7 +1,7 @@
-from enrich.tfc import Tcf
-from enrich.tei import TeiReader
-from enrich.custom_renderers import doc_to_tokenlist
-from enrich.custom_parsers import process_tokenlist
+from spacytei.tcf import Tcf
+from spacytei.tei import TeiReader
+from spacytei.tokenlist import doc_to_tokenlist
+from spacytei.tokenlist import process_tokenlist
 #from .base import check_validity_payload 
 
 

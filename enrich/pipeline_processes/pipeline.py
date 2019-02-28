@@ -5,7 +5,7 @@ import json
 import spacy
 import requests
 from .conversion import Converter
-from enrich.custom_parsers import SPACY_LANG_LST, SPACY_PIPELINE
+from enrich.default_settings import SPACY_LANG_LST, SPACY_PIPELINE
 import os
 from lxml import etree
 from io import StringIO, BytesIO
