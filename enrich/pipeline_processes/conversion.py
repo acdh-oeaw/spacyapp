@@ -52,6 +52,7 @@ class Converter:
                 #        attr_dict[d[0]] = getattr(self.original_process, d[1])
                 #    else:
                 #        attr_dict[d[0]] = check_1[d[1]]
+        print(attr_dict)
         data_converted = to[0](**attr_dict)
         if len(to) > 2:
             attr_dict = {}

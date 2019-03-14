@@ -19,7 +19,8 @@ import lxml.etree as et
 from spacytei import ner
 from spacytei.tei import TeiReader
 from enrich.custom_parsers import JsonToDocParser, process_tokenlist
-from enrich.custom_renderers import DocToJsonRenderer, doc_to_tokenlist_no_sents
+from enrich.custom_renderers import DocToJsonRenderer
+from spacytei.tokenlist import doc_to_tokenlist_no_sents
 
 from .tasks import pipe_process_files
 from django.conf import settings
@@ -44,10 +45,8 @@ def enrich_simple_jsonrequest(request):
     """
     if request.method == 'POST':
         data = request.data
-        print(data)
         enriched = process_tokenlist(nlp, data, enriched=True)
         tokenlist = doc_to_tokenlist_no_sents(enriched)
-        print(tokenlist)
         return Response(tokenlist, content_type="application/json; charset=utf-8")
     else:
         return Response(
@@ -288,7 +287,6 @@ class NLPPipeline(APIView):
                 headers=headers, json=payload
             )
             if res.status_code != 200:
-                print(res.text)
                 res = res.text
             else:
                 res = res.json()
@@ -305,7 +303,6 @@ class NLPPipeline(APIView):
         self.pipeline = data.get('nlp_pipeline', None)
         if self.pipeline is not None:
             self.pipeline = ast.literal_eval(self.pipeline)
-        print(self.pipeline)
         file_type = data.get('file_type', None)
         self.file_type = file_type
         zip_type = data.get('zip_type', None)
