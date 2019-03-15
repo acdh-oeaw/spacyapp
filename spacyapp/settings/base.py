@@ -136,3 +136,30 @@ TREETAGGER_URL = "https://linguistictagging.eos.arz.oeaw.ac.at"
 JSONPARSER_URL = "https://spacyapp.eos.arz.oeaw.ac.at/query/jsonparser-api/"
 
 SPACYAPP_TEMP_DIR = os.path.join(BASE_DIR, 'tmp')
+
+SPACYAPP_PROFILES = [
+    {
+        'title': 'tei_to_tei_de',
+        'description': '''Uses Xtx service to tokenize the TEIs and Spacy to enrich it.
+        Returns enriched TEIs. Uses the standard German spacy model for enrichment and
+        the Default profile for Xtx.
+        ''',
+        'pipeline': {'nlp_pipeline': [('acdh-tokenizer',
+                                       {'profile': 'default'}),
+                                      ('spacy',
+                                       {'language': 'de'})],
+                     "zip_type": "zip",
+                     "file_type": "application/xml+tei",
+                     "out_format": "application/xml+tei"}
+    },
+    {
+        'title': 'txt_to_json_de',
+        'description': '''Uses Spacy to enrich a plain text.
+        Returns enriched Json. Uses the standard German spacy model for enrichment.
+        ''',
+        'pipeline': {'nlp_pipeline': ('spacy', {'language': 'de'}),
+                     "zip_type": "zip",
+                     "file_type": "text/plain",
+                     "out_format": "application/json+acdhlang"}
+    }
+] 

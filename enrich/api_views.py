@@ -12,6 +12,7 @@ from rest_framework.decorators import api_view, schema
 from rest_framework.views import APIView
 from rest_framework.exceptions import ParseError
 from rest_framework.parsers import MultiPartParser
+from rest_framework import status
 from sklearn.metrics import cohen_kappa_score, precision_recall_fscore_support
 import requests
 import lxml.etree as et
@@ -194,17 +195,41 @@ class NLPPipelineNew(APIView):
     
     #def process_file(self, file):
 
-    def post(self, request, format=None):
+    def post(self, request, format=None, profile=None):
         data = request.data
         tmp_dir = getattr(settings, "SPACYAPP_TEMP_DIR", 'tmp/')
-        self.pipeline = data.get('nlp_pipeline', None)
-        self.out_format = data.get('out_format', "application/json+acdhlang")
-        if self.pipeline is not None:
-            self.pipeline = ast.literal_eval(self.pipeline)
-        #print(self.pipeline)
-        file_type = data.get('file_type', None)
+        if profile is not None:
+            p = getattr(settings, 'SPACYAPP_PROFILES', None)
+            if p is None:
+                mes = {'message': 'No profiles found. Did you specify default profiles in the settings?'}
+                return Response(data=json.dumps(mes), status=status.HTTP_400_BAD_REQUEST)
+            else:
+                profile_dict = False
+                prof_ind = []
+                for p2 in p:
+                    for p3 in p2.items():
+                        if 'title' in p3:
+                            prof_ind.append(p3)
+                for idx, p4 in enumerate(prof_ind):
+                    if p4[1] == profile:
+                        profile_dict = p[idx]
+                if not profile_dict:
+                    mes = {'message': 'Profile not found. Did you specify it in the settings?'}
+                    return Response(data=json.dumps(mes), status=status.HTTP_400_BAD_REQUEST)
+                data2 = p[idx-1]['pipeline']
+        else:
+            data2 = data
+        print(data2)
+        self.pipeline = data2.get('nlp_pipeline', None)
+        self.out_format = data2.get('out_format', "application/json+acdhlang")
+        file_type = data2.get('file_type', None)
+        zip_type = data2.get('zip_type', None)
         self.file_type = file_type
-        zip_type = data.get('zip_type', None)
+        print(self.pipeline)
+        if self.pipeline is not None:
+            if type(self.pipeline) == str:
+                self.pipeline = ast.literal_eval(self.pipeline)
+        #print(self.pipeline)
         if zip_type is not None:
             if zip_type not in self.zip_types:
                 raise ParseError(detail='zip type not supported')
@@ -422,3 +447,4 @@ def lemma(request):
         return Response(enriched)
     else:
         return Response({'token': None})
+

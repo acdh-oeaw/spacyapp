@@ -12,6 +12,7 @@ urlpatterns = [
     path('textparser-api/', api_views.textparser, name='textparser-api'),
     path('jsonparser-api/', api_views.JsonParser.as_view(), name='jsonparser-api'),
     path('nlppipeline-api/', api_views.NLPPipelineNew.as_view(), name='nlppipeline-api'),
+    path('nlppipeline-api/<profile>/', api_views.NLPPipelineNew.as_view(), name='nlppipeline-api-profile'),
     path('nlppipeline/', views.NLPPipeView.as_view(), name='nlppipeline'),
     path('test-agreement/', api_views.TestAgreement.as_view(), name='test-agreement'),
     path('download/<slug:proc_id>/', views.DownloadView.as_view(), name='download'),
