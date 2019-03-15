@@ -225,11 +225,9 @@ class NLPPipelineNew(APIView):
         file_type = data2.get('file_type', None)
         zip_type = data2.get('zip_type', None)
         self.file_type = file_type
-        print(self.pipeline)
         if self.pipeline is not None:
             if type(self.pipeline) == str:
-                self.pipeline = ast.literal_eval(self.pipeline)
-        #print(self.pipeline)
+                self.pipeline = json.loads(self.pipeline)
         if zip_type is not None:
             if zip_type not in self.zip_types:
                 raise ParseError(detail='zip type not supported')
