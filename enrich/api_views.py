@@ -192,8 +192,6 @@ class NLPPipelineNew(APIView):
     parser_classes = (MultiPartParser, )
     file_types = ['application/xml+tei', 'application/json+acdhlang', 'application/xml+tcf', 'text/plain']
     zip_types = ['zip']
-    
-    #def process_file(self, file):
 
     def post(self, request, format=None, profile=None):
         data = request.data
