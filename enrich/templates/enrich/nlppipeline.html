@@ -8,11 +8,28 @@
 {% endblock scriptHeader %}
 {% block content %}
 <div class="container">
-<form id="fileUploadForm" enctype="multipart/form-data">
+<nav>
+  <div class="nav nav-tabs" id="nav-tab" role="tablist">
+	<a class="nav-item nav-link active" id="nav-basi-tab" data-toggle="tab" href="#nav-basic" role="tab" aria-controls="nav-basic" aria-selected="true">Profile Form</a>
+    	<a class="nav-item nav-link" id="nav-expert-tab" data-toggle="tab" href="#nav-expert" role="tab" aria-controls="nav-expert" aria-selected="true">Expert</a>
+  </div>
+</nav>
+<div class="tab-content" id="nav-tabContent">
+  <div class="tab-pane fade" id="nav-expert" role="tabpanel" aria-labelledby="nav-expert-tab">.
+  <form id="fileUploadForm1" enctype="multipart/form-data">
     {% crispy form %}
+
+    <button type="submit" name="uploadp_btn" class="btn btn-primary" id="btnSubmit1">Upload!</button>
+</form>
+  </div>
+  <div class="tab-pane fade show active" id="nav-basic" role="tabpanel" aria-labelledby="nav-basic-tab">
+<form id="fileUploadForm" enctype="multipart/form-data">
+    {% crispy base_form %}
 
     <button type="submit" name="uploadp_btn" class="btn btn-primary" id="btnSubmit">Upload!</button>
 </form>
+  </div>
+</div>
 <hr/>
 <div id="results">
   <table id="res_table">

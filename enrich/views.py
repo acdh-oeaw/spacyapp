@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view
 from django.shortcuts import render
 from django.views.generic.edit import FormView
 from django.views.generic.base import TemplateView
-from .forms import TokenForm, LongTextForm, NLPPipeForm
+from .forms import TokenForm, LongTextForm, NLPPipeForm, NLPPipeFormBase
 from django.shortcuts import render_to_response
 from django_celery_results.models import TaskResult
 
@@ -66,10 +66,17 @@ class Lemmatize(FormView):
         return render(self.request, self.template_name, context)
 
 
-class NLPPipeView(FormView):
+class NLPPipeView(TemplateView):
     template_name = 'enrich/nlppipeline.html'
     form_class = NLPPipeForm
+    form_Base_class = NLPPipeFormBase
     success_url = '.'
+
+    def get_context_data(self, **kwargs): 
+        context = super().get_context_data(**kwargs)
+        context['form'] = NLPPipeForm()
+        context['base_form'] = NLPPipeFormBase()
+        return context
 
 
 class DownloadView(TemplateView):

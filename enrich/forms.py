@@ -32,22 +32,16 @@ class GenericFilterFormHelper(FormHelper):
         self.add_input(Submit('Filter', 'search'))
 
 
-class NLPPipeForm(forms.Form):
-    file_type = forms.ChoiceField(
-        choices=FILE_CHOICES
-    )
+class NLPPipeFormBase(forms.Form):
     zip_type = forms.ChoiceField(
         choices=ZIP_CHOICES,
-        hidden=True
+        widget=forms.HiddenInput()
     )
-    out_format = forms.ChoiceField(choices=OUTPUT_CHOICES, label="Output format")
     profile = forms.ChoiceField(required=False)
-    nlp_pipeline = forms.CharField(required=False, help_text="""e.g. [["acdh-tokenizer", {"profile": "default"}], ["spacy", {"language": "de"}]]""")
     file = forms.FileField()
 
     def __init__(self, *args, **kwargs):
-        super(NLPPipeForm, self).__init__(*args, **kwargs)
-        print(self.fields)
+        super(NLPPipeFormBase, self).__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_tag = True
         self.helper.form_class = 'form-horizontal'
@@ -56,9 +50,29 @@ class NLPPipeForm(forms.Form):
         pr = getattr(settings, 'SPACYAPP_PROFILES', [])
         ch2 = [('---', '----'), ]
         for p in pr:
-            print(p)
             ch2.append((p['title'], p['verbose'] ))
         self.fields['profile'].choices = tuple(ch2)
+
+
+class NLPPipeForm(forms.Form):
+    file_type = forms.ChoiceField(
+        choices=FILE_CHOICES
+    )
+    zip_type = forms.ChoiceField(
+        choices=ZIP_CHOICES,
+        widget=forms.HiddenInput()
+    )
+    out_format = forms.ChoiceField(choices=OUTPUT_CHOICES, label="Output format")
+    nlp_pipeline = forms.CharField(required=False, help_text="""e.g. [["acdh-tokenizer", {"profile": "default"}], ["spacy", {"language": "de"}]]""")
+    file = forms.FileField()
+
+    def __init__(self, *args, **kwargs):
+        super(NLPPipeForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = True
+        self.helper.form_class = 'form-horizontal'
+        self.helper.label_class = 'col-md-3'
+        self.helper.field_class = 'col-md-9'
         # self.helper.add_input(Submit('submit', 'submit'),)
 
 
