@@ -140,6 +140,7 @@ SPACYAPP_TEMP_DIR = os.path.join(BASE_DIR, 'tmp')
 SPACYAPP_PROFILES = [
     {
         'title': 'tei_to_tei_de',
+        'verbose': 'TEI to TEI (German)', 
         'description': '''Uses Xtx service to tokenize the TEIs and Spacy to enrich it.
         Returns enriched TEIs. Uses the standard German spacy model for enrichment and
         the Default profile for Xtx.
@@ -154,6 +155,7 @@ SPACYAPP_PROFILES = [
     },
     {
         'title': 'txt_to_json_de',
+        'verbose': 'Plain text to Json (German)',
         'description': '''Uses Spacy to enrich a plain text.
         Returns enriched Json. Uses the standard German spacy model for enrichment.
         ''',

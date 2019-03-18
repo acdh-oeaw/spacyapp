@@ -33,7 +33,14 @@ $(document).ready(function () {
 
 		// Create an FormData object
         var data = new FormData(form);
-
+	var u = data.get('profile');
+	var url = "/query/nlppipeline-api/";
+	    if (u != '---'){
+	    url += u + "/"
+	    } else if (data.get('nlp_pipeline') == '') {
+		    $("#results").append('<div class="alert alert-danger" role="alert">You need to specify either the pipeline or a Profile</div>');
+		    return;
+	    }
 		// If you want to add an extra field for the FormData
         //data.append("CustomField", "This is some extra data, testing");
 
@@ -43,14 +50,14 @@ $(document).ready(function () {
         $.ajax({
             type: "POST",
             enctype: 'multipart/form-data',
-            url: "/query/nlppipeline-api/",
+            url: url,
             data: data,
             processData: false,
             contentType: false,
             cache: false,
             timeout: 0,
             success: function (data) {
-
+		$("#results > div").remove();
                 $("#res_table").append('<td><a href="/query/download/'+data.proc_id+'"</a>'+data.proc_id+'</td>');
                 console.log("SUCCESS : ", data);
                 $("#btnSubmit").prop("disabled", false);
@@ -58,7 +65,7 @@ $(document).ready(function () {
             },
             error: function (e) {
 
-                $("#result").text(e.responseText);
+                $("#results").text(e.responseText);
                 console.log("ERROR : ", e);
                 $("#btnSubmit").prop("disabled", false);
 
