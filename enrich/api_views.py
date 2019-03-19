@@ -226,6 +226,7 @@ class NLPPipelineNew(APIView):
                                     pipe3['nlp_pipeline'][idx2][1].pop('language', None)
                                     pipe3['nlp_pipeline'][idx2][1]['model'] = model
                 data2 = pipe3
+                print(pipe3)
         else:
             data2 = data
         self.pipeline = data2.get('nlp_pipeline', None)

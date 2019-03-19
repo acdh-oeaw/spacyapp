@@ -137,6 +137,8 @@ JSONPARSER_URL = "https://spacyapp.eos.arz.oeaw.ac.at/query/jsonparser-api/"
 
 SPACYAPP_TEMP_DIR = os.path.join(BASE_DIR, 'tmp')
 
+NLP_MODELS_FOLDER = "/home/sennierer/spacyapp/spacyapp/media/nlp_models/"
+
 SPACYAPP_PROFILES = [
     {
         'title': 'tei_to_tei_de',

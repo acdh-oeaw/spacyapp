@@ -80,7 +80,7 @@ def process_file_new(file, pipeline, file_type, fld_out, out_format="application
         orig_process = None
         context = None
         for p in pipeline:
-            proc = PROCESS_MAPPING[p[0]](mime=file_type, payload=res, context=context)
+            proc = PROCESS_MAPPING[p[0]](mime=file_type, payload=res, context=context, options=p[1])
             context = proc.context
             res = proc.process()
             out_format_file = proc.returns
