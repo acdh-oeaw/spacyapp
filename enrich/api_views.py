@@ -214,10 +214,20 @@ class NLPPipelineNew(APIView):
                 if not profile_dict:
                     mes = {'message': 'Profile not found. Did you specify it in the settings?'}
                     return Response(data=json.dumps(mes), status=status.HTTP_400_BAD_REQUEST)
-                data2 = p[idx-1]['pipeline']
+                model = data.get('model', None)
+                pipe3 = p[idx-1]['pipeline']
+                if model != '---':
+                    for idx2, x in enumerate(pipe3['nlp_pipeline']):
+                        if x[0] == 'spacy':
+                            if type(x[1]) == dict:
+                                if 'model' in x[1].keys():
+                                    pipe3['nlp_pipeline'][idx2][1]['model'] = model
+                                elif 'language' in x[1].keys():
+                                    pipe3['nlp_pipeline'][idx2][1].pop('language', None)
+                                    pipe3['nlp_pipeline'][idx2][1]['model'] = model
+                data2 = pipe3
         else:
             data2 = data
-        print(data2)
         self.pipeline = data2.get('nlp_pipeline', None)
         self.out_format = data2.get('out_format', "application/json+acdhlang")
         file_type = data2.get('file_type', None)

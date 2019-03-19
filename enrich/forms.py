@@ -1,8 +1,9 @@
+import glob
+import json
 from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 from django.conf import settings
-
 
 
 FILE_CHOICES = (
@@ -38,6 +39,7 @@ class NLPPipeFormBase(forms.Form):
         widget=forms.HiddenInput()
     )
     profile = forms.ChoiceField(required=False)
+    model  = forms.ChoiceField(required=False)
     file = forms.FileField()
 
     def __init__(self, *args, **kwargs):
@@ -50,8 +52,15 @@ class NLPPipeFormBase(forms.Form):
         pr = getattr(settings, 'SPACYAPP_PROFILES', [])
         ch2 = [('---', '----'), ]
         for p in pr:
-            ch2.append((p['title'], p['verbose'] ))
+            ch2.append((p['title'], p['verbose']))
         self.fields['profile'].choices = tuple(ch2)
+        ch3 = [('---', '----'),]
+        for fld in glob.glob('./media/nlp_models/*/meta.json'):
+            with open(fld, 'r') as rjson:
+                gg = json.load(rjson) 
+            g = (fld.split('/')[-2], gg['description'])
+            ch3.append(g)
+        self.fields['model'].choices = tuple(ch3)
 
 
 class NLPPipeForm(forms.Form):
