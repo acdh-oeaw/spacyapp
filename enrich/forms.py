@@ -55,7 +55,7 @@ class NLPPipeFormBase(forms.Form):
             ch2.append((p['title'], p['verbose']))
         self.fields['profile'].choices = tuple(ch2)
         ch3 = [('---', '----'),]
-        for fld in glob.glob('./media/nlp_models/*/meta.json'):
+        for fld in glob.glob(getattr(settings, 'NLP_MODELS_FOLDER')+'/*/meta.json'):
             with open(fld, 'r') as rjson:
                 gg = json.load(rjson) 
             g = (fld.split('/')[-2], gg['description'])
