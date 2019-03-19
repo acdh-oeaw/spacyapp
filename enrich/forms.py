@@ -60,6 +60,7 @@ class NLPPipeForm(forms.Form):
     )
     zip_type = forms.ChoiceField(
         choices=ZIP_CHOICES,
+        initial='zip',
         widget=forms.HiddenInput()
     )
     out_format = forms.ChoiceField(choices=OUTPUT_CHOICES, label="Output format")

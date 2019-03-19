@@ -54,10 +54,65 @@ $(document).ready(function () {
 	var url = "/query/nlppipeline-api/";
 	    if (u != '---'){
 	    url += u + "/"
-	    } else if (data.get('nlp_pipeline') == '') {
-		    $("#results").append('<div class="alert alert-danger" role="alert">You need to specify either the pipeline or a Profile</div>');
+	    } else {
+	    
+		    $("#results").append('<div class="alert alert-danger" role="alert">You need to specify a Profile</div>');
 		    return;
 	    }
+		// If you want to add an extra field for the FormData
+        //data.append("CustomField", "This is some extra data, testing");
+
+		// disabled the submit button
+        $("#btnSubmit").prop("disabled", true);
+
+        $.ajax({
+            type: "POST",
+            enctype: 'multipart/form-data',
+            url: url,
+            data: data,
+            processData: false,
+            contentType: false,
+            cache: false,
+            timeout: 0,
+            success: function (data) {
+		$("#results > div").remove();
+                $("#res_table").append('<td><a href="/query/download/'+data.proc_id+'"</a>'+data.proc_id+'</td>');
+                console.log("SUCCESS : ", data);
+                $("#btnSubmit").prop("disabled", false);
+
+            },
+            error: function (e) {
+
+                $("#results").text(e.responseText);
+                console.log("ERROR : ", e);
+                $("#btnSubmit").prop("disabled", false);
+
+            },
+	    beforeSend: function(request) {
+		    var csrftoken = getCookie('csrftoken');
+		    request.setRequestHeader("X-CSRFToken", csrftoken);
+	    }
+        });
+
+    });
+
+    $("#btnSubmit1").click(function (event) {
+
+        //stop submit the form, we will post it manually.
+        event.preventDefault();
+
+        // Get form
+        var form = $('#fileUploadForm1')[0];
+
+		// Create an FormData object
+        var data = new FormData(form);
+	var url = "/query/nlppipeline-api/";
+	var u2 = data.get('nlp_pipeline');
+	    if (u2 == ''){
+	    url += u + "/"
+	    $("#results").append('<div class="alert alert-danger" role="alert">You need to specify the pipeline</div>');
+	    return;
+	    };
 		// If you want to add an extra field for the FormData
         //data.append("CustomField", "This is some extra data, testing");
 
