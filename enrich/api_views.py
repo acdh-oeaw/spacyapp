@@ -215,7 +215,7 @@ class NLPPipelineNew(APIView):
                     mes = {'message': 'Profile not found. Did you specify it in the settings?'}
                     return Response(data=json.dumps(mes), status=status.HTTP_400_BAD_REQUEST)
                 model = data.get('model', None)
-                pipe3 = p[idx-1]['pipeline']
+                pipe3 = profile_dict['pipeline']
                 if model != '---':
                     for idx2, x in enumerate(pipe3['nlp_pipeline']):
                         if x[0] == 'spacy':
@@ -226,7 +226,6 @@ class NLPPipelineNew(APIView):
                                     pipe3['nlp_pipeline'][idx2][1].pop('language', None)
                                     pipe3['nlp_pipeline'][idx2][1]['model'] = model
                 data2 = pipe3
-                print(pipe3)
         else:
             data2 = data
         self.pipeline = data2.get('nlp_pipeline', None)
