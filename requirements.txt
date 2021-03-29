@@ -64,7 +64,7 @@ plac==0.9.6
 preshed==2.0.1
 prometheus-client==0.4.2
 prompt-toolkit==1.0.15
-Pygments==2.2.0
+Pygments==2.7.4
 pyreadline==2.1
 python-dateutil==2.7.3
 pytz==2018.7
