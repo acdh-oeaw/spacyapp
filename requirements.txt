@@ -92,7 +92,7 @@ traitlets==4.3.2
 typing==3.6.4
 ujson==1.35
 uritemplate==3.0.0
-urllib3==1.24.1
+urllib3==1.26.5
 vine==1.1.4
 wcwidth==0.1.7
 webencodings==0.5.1
